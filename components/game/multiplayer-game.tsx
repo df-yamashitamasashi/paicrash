@@ -127,7 +127,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
           break;
       }
     },
-    [isSpectator, mySnapshot, sendGameInput],
+    [isSpectator, mySnapshot, isPlayerAnimating, sendGameInput],
   );
 
   useEffect(() => {

@@ -101,10 +101,11 @@ export function useMultiplayer() {
         players: playersList
       };
       
-      const prevMatch = store.matchSnapshot;
+      const stateSnapshot = useMultiplayerStore.getState();
+      const prevMatch = stateSnapshot.matchSnapshot;
       store.setMatchSnapshot(matchSnapshotObj);
       
-      const myId = store.playerId;
+      const myId = stateSnapshot.playerId;
       if (myId) {
         const prevMe = prevMatch?.players.find(p => p.playerId === myId)?.gameState;
         const currentMe = playersList.find(p => p.playerId === myId)?.gameState;
