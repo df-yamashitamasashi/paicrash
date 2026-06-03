@@ -77,11 +77,11 @@
 
 | ID | 要件 | 目標 |
 |----|------|------|
-| NFR-3.1 | 通信暗号化 | 本番環境は TLS 1.2 以上（`wss://`）、ALB で終端 |
+| NFR-3.1 | 通信暗号化 | 本番環境は TLS 1.2 以上、Cloud Run / Firebase で終端 |
 | NFR-3.2 | ゲーム状態 | スコア・牌面の真実はサーバー権威のみ |
 | NFR-3.3 | 入力検証 | ニックネーム・ルーム名・チャットのサニタイズ（実装済） |
 | NFR-3.4 | レート制限 | セッション作成 10/分、チャット 20/分、ゲーム入力 120/10 秒 |
-| NFR-3.5 | WAF | AWS WAF（IP レート制限 + AWSManagedRulesCommonRuleSet） |
+| NFR-3.5 | WAF | Cloud Armor / Firebase セキュリティルール |
 | NFR-3.6 | 個人情報 | メールアドレス・パスワード・実名を収集しない |
 
 ### NFR-4 アクセシビリティ
@@ -105,11 +105,11 @@
 
 | ID | 要件 | 目標 |
 |----|------|------|
-| NFR-6.1 | IaC | AWS CDK (TypeScript) で全インフラを管理 |
-| NFR-6.2 | CI/CD | GitHub Actions + OIDC 認証（長期アクセスキー不使用） |
-| NFR-6.3 | コンテナ | Dockerfile マルチステージビルド（devDeps 除外） |
-| NFR-6.4 | 監視 | CloudWatch メモリアラーム（> 80%） |
-| NFR-6.5 | スケール | 単一 ECS タスク（desired: 1）、同時接続 100 以下を目安 |
+| NFR-6.1 | IaC | Firebase CLI / gcloud CLI で管理 |
+| NFR-6.2 | CI/CD | GitHub Actions + OIDC 認証 (GCP Workload Identity) |
+| NFR-6.3 | コンテナ | Dockerfile マルチステージビルド (Cloud Run向け) |
+| NFR-6.4 | 監視 | Cloud Monitoring アラート |
+| NFR-6.5 | スケール | Cloud Run 自動スケーリング |
 
 ---
 
@@ -118,8 +118,8 @@
 - パッケージマネージャ: **pnpm**
 - フレームワーク: Next.js 16 App Router、React 19
 - 状態管理: Zustand（`game-store.ts` / `multiplayer-store.ts`）
-- リアルタイム: Socket.IO（`server/index.ts` + `socket.io-client`）
-- インフラ: AWS CDK (TypeScript)
+- リアルタイム: Firebase Realtime Database
+- インフラ: GCP / Firebase
 - CI/CD: GitHub Actions + OIDC
 
 ---
@@ -128,8 +128,8 @@
 
 | 優先 | タスク | 関連 |
 |------|--------|------|
-| P1 | Dockerfile + tsconfig.server.json | tasks #1, #2 |
-| P1 | CDK InfraStack + AppStack | tasks #3〜#6 |
+| P1 | Dockerfile + Cloud Run 設定 | tasks #1, #2 |
+| P1 | Firebase SDK 連携 | tasks #3〜#6 |
 | P1 | GitHub Actions CI/CD | tasks #7 |
 | P1 | 戦績レポート UI | tasks #8〜#10 |
 | P2 | vitest + fast-check テスト | tasks #12〜#16 |

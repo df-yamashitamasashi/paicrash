@@ -8,20 +8,18 @@
 
 - Node.js 22 以上推奨
 - pnpm がインストール済みであること
-- AWS CLI（本番デプロイ時）
+- gcloud CLI / Firebase CLI（本番デプロイ管理時）
 
 ---
 
 ## ローカル開発
 
 ```bash
-# 初回
+# 初回依存関係インストール
 pnpm install
 
-# ターミナル1: リアルタイムサーバー（対戦・観戦に必須）
-pnpm dev:server   # tsx watch server/index.ts
-
-# ターミナル2: フロント（http://localhost:3000）
+# フロントエンド開発サーバーの起動
+# (http://localhost:3000)
 pnpm dev
 
 # 本番ビルド
@@ -36,7 +34,7 @@ pnpm exec tsc --noEmit
 pnpm test
 ```
 
-`.env.local` に `NEXT_PUBLIC_SOCKET_URL` を設定（`.env.example` 参照）。
+`.env.local` に Firebase 関連の環境変数を設定してください（`.env.example` 参照）。
 
 ---
 
@@ -44,140 +42,61 @@ pnpm test
 
 | 変数名 | スコープ | ローカル値 | 説明 |
 |--------|---------|-----------|------|
-| `NEXT_PUBLIC_SOCKET_URL` | Client | `http://localhost:3001` | Socket.IO サーバーの接続先 URL |
-| `PORT` | Server | `3001` | サーバーのリッスンポート |
-| `ALLOWED_ORIGINS` | Server | `http://localhost:3000` | CORS 許可オリジン（カンマ区切り） |
-
-### ローカル LAN 環境（同一ネットワーク内）
-
-```bash
-# LAN IP が 192.168.1.10 の場合
-NEXT_PUBLIC_SOCKET_URL=http://192.168.1.10:3001
-ALLOWED_ORIGINS=http://192.168.1.10:3000,http://192.168.1.11:3000
-```
-
-### AWS 環境
-
-```bash
-NEXT_PUBLIC_SOCKET_URL=wss://api.your-domain.com
-ALLOWED_ORIGINS=https://your-app.vercel.app
-```
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Client | `...` | Firebase API Key |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Client | `...` | Firebase Auth Domain |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Client | `...` | Firebase Project ID |
+| `NEXT_PUBLIC_FIREBASE_DATABASE_URL` | Client | `...` | Firebase Realtime Database URL |
 
 ---
 
 ## 手動テストチェックリスト
 
-### メインメニュー
-
-- [ ] シングルプレイ・オンライン対戦・役ガイドが開ける
-- [ ] 「メニューへ戻る」でメニューに戻れる
-
 ### シングルプレイ
 
 - [ ] 牌の左右移動・落下・ハードドロップ
 - [ ] 刻子・順子で消去、連鎖・スコア更新
-- [ ] 消去演出（拡大→光→縮小）が表示される
-- [ ] 消去履歴パネルに消した牌が記録される
-- [ ] 一時停止・ゲームオーバー
-- [ ] 役ガイドの内容と一致する役表示
+- [ ] 消去演出が表示される
 
-### オンライン対戦
+### オンライン対戦（Firebase）
 
-- [ ] 名前入力 → 接続 → ルーム作成 or 参加
-- [ ] 観戦参加（別ブラウザ/タブ）
-- [ ] 準備完了 → 開始 → 対戦画面
-- [ ] チャット送信（ルーム全員に届く）
-- [ ] 勝敗ダイアログ → 「レポートをダウンロード」ボタン
-- [ ] ダウンロードした JSON の内容確認（個人情報なし）
-- [ ] ブラウザリロード後のセッション復元
-- [ ] 切断・再接続の動作確認
+- [ ] Google ログインができること
+- [ ] ルーム作成 or 参加ができること
+- [ ] 複数ブラウザ間で牌やスコアが同期されること
+- [ ] ガベージ（おじゃま牌）が送信されること
 
 ---
 
-## AWS デプロイ
+## GCP / Firebase デプロイ
 
-### 初回セットアップ（CDK）
-
-```bash
-# CDK 依存関係インストール
-cd cdk
-pnpm install
-
-# AWS 認証（プロファイル設定済みの場合）
-export AWS_PROFILE=your-profile
-
-# CDK ブートストラップ（初回のみ）
-pnpm cdk bootstrap
-
-# InfraStack デプロイ（VPC, ECR, ACM, WAF）
-pnpm cdk deploy InfraStack
-
-# AppStack デプロイ（ECS, ALB, CloudWatch）
-pnpm cdk deploy AppStack
-```
-
-### 通常デプロイ（GitHub Actions）
+### CI/CD デプロイ (GitHub Actions)
 
 `main` ブランチへのプッシュで自動実行：
 1. TypeScript 型チェック（`tsc --noEmit`）
-2. ESLint チェック（`pnpm lint`）
-3. Docker イメージビルド → ECR プッシュ
-4. ECS サービス強制デプロイ（`--force-new-deployment`）
+2. Workload Identity Federation による GCP 認証
+3. Docker イメージビルド → Artifact Registry プッシュ
+4. Cloud Run サービスデプロイ
 
-### 手動デプロイ（緊急時）
+### データベース (Firebase RTDB)
+
+Firebase Console または Firebase CLI からセキュリティルールをデプロイします。
 
 ```bash
-# ECR ログイン
-aws ecr get-login-password --region ap-northeast-1 | \
-  docker login --username AWS --password-stdin \
-  ${AWS_ACCOUNT_ID}.dkr.ecr.ap-northeast-1.amazonaws.com
-
-# イメージビルド & プッシュ
-docker build -t paicrash-server .
-docker tag paicrash-server:latest \
-  ${AWS_ACCOUNT_ID}.dkr.ecr.ap-northeast-1.amazonaws.com/paicrash-server:latest
-docker push \
-  ${AWS_ACCOUNT_ID}.dkr.ecr.ap-northeast-1.amazonaws.com/paicrash-server:latest
-
-# ECS 強制デプロイ
-aws ecs update-service \
-  --cluster paicrash-cluster \
-  --service paicrash-server \
-  --force-new-deployment \
-  --region ap-northeast-1
+# Firebase CLI のセットアップとデプロイ
+firebase login
+firebase use paicrash-gcp-project-id
+firebase deploy --only database
 ```
 
----
+### 手動デプロイ (Cloud Run)
 
-## よくある問題
-
-### `pnpm dev` が起動しない
-
-1. `node -v` でバージョン確認（22+）
-2. `rm -rf node_modules && pnpm install` で再インストール
-3. ポート 3000 占有 → 別プロセスを停止するか `pnpm dev -- -p 3001`
-
-### ビルドが通らない
-
-- `pnpm exec tsc --noEmit` で型エラーを確認
-- ESLint: `pnpm lint` の出力に従い修正
-
-### サーバーに接続できない
-
-1. `pnpm dev:server` が起動しているか確認
-2. `.env.local` の `NEXT_PUBLIC_SOCKET_URL` が正しいか確認
-3. ブラウザの DevTools → Network タブで WebSocket 接続を確認
-
-### セッションが復元されない
-
-1. ブラウザの localStorage に `paicrash.sessionToken` が存在するか確認
-2. サーバーが再起動していた場合はセッションが消滅（仕様）→ 新規接続フローへ
-
-### ゲームが重い / カクつく
-
-1. ブラウザ DevTools の Performance で tick 負荷を確認
-2. 不要な再レンダー — Zustand セレクタの粒度を確認
-3. モバイル実機でタッチ応答を確認
+```bash
+# ビルドとデプロイを同時に行う場合
+gcloud run deploy paicrash-server \
+  --source . \
+  --region asia-northeast1 \
+  --allow-unauthenticated \
+  --project paicrash-gcp-project-id
+```
 
 ---
 
@@ -185,40 +104,25 @@ aws ecs update-service \
 
 | 深刻度 | 例 | 対応 |
 |--------|-----|------|
-| P1 | 全ユーザーが接続不可 | ECS タスク状態確認、ALB ヘルスチェック確認、ロールバック、ステータス告知 |
-| P2 | 対戦開始失敗・desync | CloudWatch ログ確認、ECS タスク再起動、クライアント強制再接続 |
+| P1 | 全ユーザーがアクセス不可 | Cloud Run サービス状態確認、最新リビジョンへのロールバック |
+| P2 | 対戦時の同期遅延・エラー | Firebase RTDB の接続数・帯域制限確認、Cloud Monitoring ログ確認 |
 | P3 | UI 崩れ・軽微バグ | フロント hotfix デプロイ |
 
-### ECS タスク再起動
+### ログの確認
 
 ```bash
-aws ecs update-service \
-  --cluster paicrash-cluster \
-  --service paicrash-server \
-  --force-new-deployment \
-  --region ap-northeast-1
-```
-
-**注意**: 再起動時に全セッション・ルーム・対戦状態が消滅します。
-
-### CloudWatch ログ確認
-
-```bash
-aws logs tail /ecs/paicrash-server --follow --region ap-northeast-1
+# Cloud Run のログを確認
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=paicrash-server" --limit 50
 ```
 
 ---
 
 ## ロールバック
 
-- **フロントエンド**: Vercel/Amplify の管理画面で前リリースへロールバック
-- **サーバー**: ECR の前バージョンタグを指定して ECS タスク定義を更新
+- **フロントエンド (Cloud Run)**: Cloud Console または CLI からトラフィックを過去の正常なリビジョンへ 100% 振り替えます。
 
 ```bash
-# 前バージョンのイメージタグを確認
-aws ecr list-images --repository-name paicrash-server --region ap-northeast-1
-
-# タスク定義を更新して前バージョンを指定（CDK または手動）
+gcloud run services update-traffic paicrash-server --to-revisions=PREVIOUS_REVISION=100
 ```
 
 ---
@@ -227,12 +131,5 @@ aws ecr list-images --repository-name paicrash-server --region ap-northeast-1
 
 | メトリクス | 閾値 | アラート先 |
 |-----------|------|-----------|
-| ECS メモリ使用率 | > 80% | CloudWatch Alarm |
-| ALB 5xx エラー率 | > 1% | 手動確認（要設定） |
-| ECS タスク数 | < 1 | 手動確認（要設定） |
-
----
-
-## 連絡先
-
-プロジェクトオーナー・オンコールは未記載。運用開始前に本セクションを更新してください。
+| Cloud Run エラー率 | > 1% | Cloud Monitoring アラート |
+| RTDB 同時接続数 | 上限の 80% | Firebase Console アラート |

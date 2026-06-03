@@ -1,18 +1,23 @@
-name: Deploy to ECS
+name: Deploy to Google Cloud Run
 
 on:
   push:
     branches: [main]
 
 permissions:
-  id-token: write   # OIDC 認証に必要
+  id-token: write # OIDC 認証に必要
   contents: read
+
+env:
+  PROJECT_ID: paicrash # TODO: 実際のGCPプロジェクトIDに変更
+  REGION: asia-northeast1
+  SERVICE_NAME: paicrash-server
+  WIF_PROVIDER: projects/123456789012/locations/global/workloadIdentityPools/github/providers/github-provider # TODO: 実際のWIFプロバイダに変更
+  WIF_SERVICE_ACCOUNT: github-actions@paicrash-gcp-project-id.iam.gserviceaccount.com # TODO: 実際のサービスアカウントに変更
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
 
@@ -22,41 +27,44 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'pnpm'
+          node-version: "22"
+          cache: "pnpm"
 
       - run: pnpm install --frozen-lockfile
 
       # 型チェック & Lint
       - run: pnpm exec tsc --noEmit
 
-      # AWS OIDC 認証
-      - uses: aws-actions/configure-aws-credentials@v4
+      # GCP OIDC 認証 (Workload Identity Federation)
+      - id: "auth"
+        uses: "google-github-actions/auth@v2"
         with:
-          role-to-assume: arn:aws:iam::513855545944:role/paicrashgGitHubActionsRole
-          aws-region: ap-northeast-1
+          workload_identity_provider: "${{ env.WIF_PROVIDER }}"
+          service_account: "${{ env.WIF_SERVICE_ACCOUNT }}"
 
-      # ECR ログイン
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+      # Google Cloud SDK セットアップ
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v2"
+
+      # Docker 認証 (Artifact Registry)
+      - name: "Docker Auth"
+        run: |-
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
       # イメージビルド & プッシュ
       - name: Build and push Docker image
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
+          IMAGE_NAME: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/paicrash-repo/${{ env.SERVICE_NAME }}
         run: |
-          docker build -t $ECR_REGISTRY/paicrashg-server:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/paicrashg-server:$IMAGE_TAG
-          docker tag $ECR_REGISTRY/paicrashg-server:$IMAGE_TAG $ECR_REGISTRY/paicrashg-server:latest
-          docker push $ECR_REGISTRY/paicrashg-server:latest
+          docker build -t $IMAGE_NAME:$IMAGE_TAG -t $IMAGE_NAME:latest .
+          docker push $IMAGE_NAME:$IMAGE_TAG
+          docker push $IMAGE_NAME:latest
 
-      # ECS サービス強制デプロイ
-      - name: Deploy to ECS
-        run: |
-          aws ecs update-service \
-            --cluster paicrashg-cluster \
-            --service paicrashg-server \
-            --force-new-deployment \
-            --region ap-northeast-1
+      # Cloud Run へのデプロイ
+      - name: "Deploy to Cloud Run"
+        uses: "google-github-actions/deploy-cloudrun@v2"
+        with:
+          service: "${{ env.SERVICE_NAME }}"
+          region: "${{ env.REGION }}"
+          image: "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/paicrash-repo/${{ env.SERVICE_NAME }}:${{ github.sha }}"

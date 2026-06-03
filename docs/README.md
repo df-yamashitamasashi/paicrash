@@ -8,18 +8,21 @@
 |----------|------|
 | [project_definition.md](./project_definition.md) | サービス概要・価値仮説・ターゲット |
 | [requirements.md](./requirements.md) | 機能要件・非機能要件・実装状況・バックログ |
-| [system_architecture.md](./system_architecture.md) | システム構成・レイヤー・AWS インフラ・Socket.IO イベント一覧 |
-| [basic_design.md](./basic_design.md) | 画面遷移・状態管理・ゲームルール・マルチプレイ設計・戦績レポート |
-| [coding_conventions.md](./coding_conventions.md) | コーディング規約（`.cursor/rules/` と整合） |
-| [development_progress.md](./development_progress.md) | 作業ログ（変更履歴・次アクション・バックログ） |
-| [runbook.md](./runbook.md) | ローカル開発・AWS デプロイ・障害対応・監視手順 |
+| [system_architecture.md](./system_architecture.md) | システム構成・レイヤー・GCP インフラ・Firebase データフロー |
+| [requirements.md](./requirements.md) | 機能 / 非機能要件・制約・優先バックログ |
+| [basic_design.md](./basic_design.md) | UI 設計・コンポーネント構造・ドメインモデル |
+| [coding_conventions.md](./coding_conventions.md) | Next.js / TypeScript 実装ルール・状態管理ルール |
+| [runbook.md](./runbook.md) | ローカル開発・GCP デプロイ・障害対応・監視手順 |
+| [development_progress.md](./development_progress.md) | 作業ログ・タスク進捗（AI へのコンテキスト引き継ぎ用） |
 
-## スペック（詳細設計）
+## 過去の仕様書（アーカイブ）
 
-| パス | 内容 |
-|------|------|
+Socket.IO によるサーバー権威型マルチプレイに関する詳細仕様。
+
+| ファイル | 説明 |
+|---------|------|
 | [.kiro/specs/online-multiplayer/requirements.md](../.kiro/specs/online-multiplayer/requirements.md) | オンライン対戦機能の詳細要件（12 要件） |
-| [.kiro/specs/online-multiplayer/design.md](../.kiro/specs/online-multiplayer/design.md) | AWS CDK 設計・WebSocket フロー・PBT プロパティ |
+| [.kiro/specs/online-multiplayer/design.md](../.kiro/specs/online-multiplayer/design.md) | AWS CDK 設計・WebSocket フロー・PBT プロパティ (アーカイブ) |
 | [.kiro/specs/online-multiplayer/tasks.md](../.kiro/specs/online-multiplayer/tasks.md) | 実装タスク一覧（16 タスク） |
 
 ## 関連リソース
