@@ -189,6 +189,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
                 currentTile={cpuState.currentTile}
                 isGameOver={cpuState.isGameOver}
                 isPaused={false}
+                isOpponent={true}
                 countdown={countdown}
               />
               {cpuState.isGameOver && (
@@ -295,6 +296,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
                   currentTile={cpuState.currentTile}
                   isGameOver={cpuState.isGameOver}
                   isPaused={false}
+                  isOpponent={true}
                   isMobile
                   countdown={countdown}
                 />

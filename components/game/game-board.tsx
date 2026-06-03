@@ -178,19 +178,71 @@ export const GameBoardComponent = React.memo(function GameBoardComponent({
         </div>
       )}
 
-      {/* Yakuman Marquee Overlay Banner */}
-      {!isOpponent && isYakumanAnimating && yakumanName && (
-        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-50 backdrop-blur-xs">
-          <div className="w-full bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-600 border-y-4 border-yellow-300 py-3 shadow-[0_0_30px_#eab308] overflow-hidden">
-            <div className="animate-yakuman-banner whitespace-nowrap text-center font-extrabold text-black tracking-widest text-2xl md:text-3xl drop-shadow-md">
-              ⚡ 役満 ⚡ 【 {yakumanName} 】 ⚡ 役満 ⚡
+      {/* Yakuman Achievement Card — シェアしたくなるデザイン */}
+      {!isOpponent && isYakumanAnimating && yakumanName && (() => {
+        const score = useGameStore.getState().gameState.score;
+        return (
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-50"
+          style={{ backgroundColor: 'oklch(0.18 0.02 50 / 0.82)', backdropFilter: 'blur(6px)' }}>
+          {/* Warm radial glow behind card */}
+          <div className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'radial-gradient(ellipse 60% 50% at 50% 50%, oklch(0.80 0.12 80 / 0.12) 0%, transparent 70%)',
+            }} />
+          {/* Achievement card */}
+          <div className="relative w-[82%] max-w-xs flex flex-col items-center py-6 px-5 rounded-2xl overflow-hidden animate-yakuman-entrance"
+            style={{
+              backgroundColor: 'oklch(0.26 0.03 50)',
+              border: '1px solid oklch(0.75 0.12 80 / 0.25)',
+              boxShadow: '0 12px 48px oklch(0.15 0.02 50 / 0.7), 0 0 0 1px oklch(0.80 0.12 80 / 0.08)',
+            }}>
+            {/* Shimmer sweep */}
+            <div className="absolute inset-0 animate-yakuman-shimmer pointer-events-none"
+              style={{
+                background: 'linear-gradient(105deg, transparent 40%, oklch(0.95 0.02 80 / 0.06) 45%, oklch(0.95 0.02 80 / 0.10) 50%, oklch(0.95 0.02 80 / 0.06) 55%, transparent 60%)',
+                backgroundSize: '200% 100%',
+              }} />
+            {/* Top accent */}
+            <div className="w-8 h-px rounded-full mb-4"
+              style={{ backgroundColor: 'oklch(0.80 0.15 80 / 0.5)' }} />
+            {/* "YAKUMAN" label */}
+            <span className="text-[9px] font-bold tracking-[0.4em] uppercase mb-1"
+              style={{ color: 'oklch(0.80 0.15 80 / 0.6)' }}>
+              yakuman
+            </span>
+            {/* Divider dots */}
+            <div className="flex gap-1 mb-3">
+              <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'oklch(0.80 0.15 80 / 0.3)' }} />
+              <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'oklch(0.80 0.15 80 / 0.5)' }} />
+              <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'oklch(0.80 0.15 80 / 0.3)' }} />
             </div>
+            {/* Yakuman name — gold gradient hero text */}
+            <span className="text-3xl md:text-4xl font-extrabold tracking-wider text-center leading-tight yakuman-gold-text">
+              {yakumanName}
+            </span>
+            {/* Score */}
+            <div className="flex flex-col items-center mt-4 gap-0.5">
+              <span className="text-[9px] font-semibold tracking-[0.2em] uppercase"
+                style={{ color: 'oklch(0.60 0.04 60 / 0.6)' }}>
+                score
+              </span>
+              <span className="text-lg font-bold tabular-nums tracking-wide"
+                style={{ color: 'oklch(0.92 0.02 85)' }}>
+                {score.toLocaleString()}
+              </span>
+            </div>
+            {/* Bottom divider */}
+            <div className="w-16 h-px rounded-full mt-4 mb-3"
+              style={{ backgroundColor: 'oklch(0.80 0.15 80 / 0.2)' }} />
+            {/* Brand */}
+            <span className="text-[10px] font-extrabold tracking-[0.15em]"
+              style={{ color: 'oklch(0.55 0.04 50 / 0.5)' }}>
+              PaiCrash
+            </span>
           </div>
-          <span className="text-[10px] text-yellow-300 font-bold mt-2 animate-pulse">
-            SCREEN FROZEN — DEVASTATING DAMAGE DETECTED
-          </span>
         </div>
-      )}
+        );
+      })()}
       
       </div>
     </div>
