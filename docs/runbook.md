@@ -89,7 +89,11 @@ export REPO_NAME="gYama/paicrash"
 gcloud config set project \$PROJECT_ID
 
 # 必要なAPIを有効化します
-gcloud services enable iamcredentials.googleapis.com sts.googleapis.com
+gcloud services enable \
+    iamcredentials.googleapis.com \
+    sts.googleapis.com \
+    artifactregistry.googleapis.com \
+    run.googleapis.com
 
 # Workload Identity プールを作成します
 gcloud iam workload-identity-pools create "github" \\
