@@ -74,26 +74,94 @@ export function YakuGuide({ open, onOpenChange }: YakuGuideProps) {
             <h4 className="font-semibold mb-2 text-sm">消えるパターン（3つ以上繋げる）</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">同じ牌を3つ以上（刻子）<br/>直線だけでなくL字やT字、斜めでもOK</p>
-                <div className="flex gap-4 items-end">
-                  <div className="flex gap-0.5">
-                    <Tile tile={mockTiles.p5} size="sm"/><Tile tile={mockTiles.p5} size="sm"/><Tile tile={mockTiles.p5} size="sm"/>
+                <p className="text-xs text-muted-foreground font-medium">同じ牌を3つ以上（刻子）<br/>直線だけでなくL字やT字、斜めやその複合でもOK</p>
+                <div className="flex gap-4 items-end flex-wrap">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">直線</span>
+                    <div className="flex gap-0.5">
+                      <Tile tile={mockTiles.p5} size="sm"/><Tile tile={mockTiles.p5} size="sm"/><Tile tile={mockTiles.p5} size="sm"/>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-0.5">
-                    <Tile tile={mockTiles.p5} size="sm"/>
-                    <div className="flex gap-0.5"><Tile tile={mockTiles.p5} size="sm"/><Tile tile={mockTiles.p5} size="sm"/></div>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">L字</span>
+                    <div className="flex flex-col gap-0.5">
+                      <Tile tile={mockTiles.p5} size="sm"/>
+                      <div className="flex gap-0.5"><Tile tile={mockTiles.p5} size="sm"/><Tile tile={mockTiles.p5} size="sm"/></div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">斜め</span>
+                    <div className="grid grid-cols-3 gap-0.5">
+                      <Tile tile={mockTiles.p5} size="sm" />
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                      <Tile tile={mockTiles.p5} size="sm" />
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                      <Tile tile={mockTiles.p5} size="sm" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">複合（直線＋斜め）</span>
+                    <div className="grid grid-cols-3 gap-0.5">
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                      <Tile tile={mockTiles.p5} size="sm" />
+                      <Tile tile={mockTiles.p5} size="sm" />
+                      <Tile tile={mockTiles.p5} size="sm" />
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                    </div>
                   </div>
                 </div>
               </div>
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">連続する数字を3つ以上（順子）<br/>順番はバラバラでも、斜めを含め繋がっていればOK</p>
-                <div className="flex gap-4 items-end">
-                  <div className="flex gap-0.5">
-                    <Tile tile={mockTiles.m1} size="sm"/><Tile tile={mockTiles.m2} size="sm"/><Tile tile={mockTiles.m3} size="sm"/>
+                <p className="text-xs text-muted-foreground font-medium">連続する数字を3つ以上（順子）<br/>直線・斜め・上下左右が混ざって繋がっていてもOK</p>
+                <div className="flex gap-4 items-end flex-wrap">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">直線</span>
+                    <div className="flex gap-0.5">
+                      <Tile tile={mockTiles.m1} size="sm"/><Tile tile={mockTiles.m2} size="sm"/><Tile tile={mockTiles.m3} size="sm"/>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-0.5">
-                    <Tile tile={mockTiles.m2} size="sm"/>
-                    <div className="flex gap-0.5"><Tile tile={mockTiles.m1} size="sm"/><Tile tile={mockTiles.m3} size="sm"/></div>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">L字</span>
+                    <div className="flex flex-col gap-0.5">
+                      <Tile tile={mockTiles.m2} size="sm"/>
+                      <div className="flex gap-0.5"><Tile tile={mockTiles.m1} size="sm"/><Tile tile={mockTiles.m3} size="sm"/></div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">斜め</span>
+                    <div className="grid grid-cols-3 gap-0.5">
+                      <Tile tile={mockTiles.m1} size="sm" />
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                      <Tile tile={mockTiles.m2} size="sm" />
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                      <Tile tile={mockTiles.m3} size="sm" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">複合（直線＋斜め）</span>
+                    <div className="grid grid-cols-3 gap-0.5">
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                      <Tile tile={mockTiles.m3} size="sm" />
+                      <Tile tile={mockTiles.m1} size="sm" />
+                      <Tile tile={mockTiles.m2} size="sm" />
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                      <div className="w-7 h-9" />
+                    </div>
                   </div>
                 </div>
               </div>

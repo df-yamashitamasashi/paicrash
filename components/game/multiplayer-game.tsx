@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMultiplayer } from '@/hooks/use-multiplayer';
 import { useYakumanAnimation } from '@/hooks/use-yakuman-animation';
 import { GameBoardComponent } from './game-board';
