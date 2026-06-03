@@ -8,12 +8,16 @@ import { SESSION_STORAGE_KEY, useMultiplayerStore } from '@/lib/multiplayer-stor
 import { audio } from '@/lib/audio-manager';
 import { applyGameInput, createInitialMultiplayerGameState, flushGarbageQueue, getTickIntervalMs } from '@/lib/multiplayer-game-logic';
 
+const sharedLocalGameStateRef = { current: null as any };
+const sharedGameLoopRef = { current: null as NodeJS.Timeout | null };
+const sharedListenersRef = { current: [] as Array<() => void> };
+
 export function useMultiplayer() {
   const store = useMultiplayerStore();
   
-  const localGameStateRef = useRef<any>(null);
-  const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
-  const listenersRef = useRef<Array<() => void>>([]);
+  const localGameStateRef = sharedLocalGameStateRef;
+  const gameLoopRef = sharedGameLoopRef;
+  const listenersRef = sharedListenersRef;
 
   const cleanupListeners = useCallback(() => {
     listenersRef.current.forEach(unsub => unsub());
