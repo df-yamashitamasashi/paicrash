@@ -110,12 +110,14 @@ export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) 
           <h1 className="text-2xl font-bold text-primary">
             PaiCrash
           </h1>
-          {onMultiplayerClick && (
-            <Button variant="outline" size="sm" onClick={onMultiplayerClick}>
-              <Users className="h-4 w-4 mr-2" />
-              オンライン対戦
-            </Button>
-          )}
+          <div className="flex items-center gap-2 mr-32">
+            {onMultiplayerClick && (
+              <Button variant="outline" size="sm" onClick={onMultiplayerClick}>
+                <Users className="h-4 w-4 mr-2" />
+                オンライン対戦
+              </Button>
+            )}
+          </div>
         </div>
         
         {/* Game area */}
@@ -163,7 +165,7 @@ export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) 
           <h1 className="text-lg font-bold text-primary">
             PaiCrash
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mr-32">
             {onMultiplayerClick && (
               <Button variant="ghost" size="sm" onClick={onMultiplayerClick} className="h-8 px-2">
                 <Users className="h-4 w-4" />
