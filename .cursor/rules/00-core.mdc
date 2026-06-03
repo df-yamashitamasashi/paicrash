@@ -1,0 +1,71 @@
+---
+description: 麻雀パズル（paijang）プロジェクトの共通方針・品質基準・エージェント振る舞い
+alwaysApply: true
+---
+
+# 麻雀パズル — コアルール
+
+参照: `GEMINI.md`（プロジェクト固有）、`GEMINI.md.base`（品質テンプレート）
+
+## プロジェクト概要
+
+日本の麻雀をテーマにした落ち物パズルゲーム（Next.js App Router）。シングルプレイとネットワーク対戦（ロビー・部屋）を想定。広告収入モデルを前提としたモバイル／ウェブ向けゲーム。
+
+## 作業レベル（必読）
+
+- **本番想定**: 指示がない限り MVP / PoC / ダミーデータ / プレースホルダー実装を作らない
+- **最小変更**: 依頼範囲外のリファクタ・フォーマット変更・依存追加はしない
+- **既存慣習優先**: 周辺コードの命名・型・パターンに合わせる
+- **日本語**: ユーザー向け説明・コミット案・PR 文案は日本語で簡潔に
+
+## 技術スタック
+
+- Next.js 16（App Router）、React 19、TypeScript 5（`strict: true`）
+- Tailwind CSS 4、Zustand、Radix UI（`components/ui/`）、Lucide
+- パッケージマネージャ: **pnpm**（`npm` ではなく `pnpm` を使う）
+- パスエイリアス: `@/*` → リポジトリルート
+
+## ディレクトリ責務
+
+| パス | 責務 |
+|------|------|
+| `app/` | ルートレイアウト・ページ（`'use client'` は必要な箇所のみ） |
+| `lib/game-engine.ts` | ボード生成・マッチ・役検出のコアロジック |
+| `lib/mahjong-types.ts` | 牌・ボード・役の型定義 |
+| `lib/yaku-data.ts` | 役定義とスコア計算 |
+| `lib/game-store.ts` / `lib/multiplayer-store.ts` | Zustand ストア |
+| `hooks/` | 接続・同期などの React フック |
+| `components/game/` | ゲーム UI |
+| `components/ui/` | 再利用 UI プリミティブ（shadcn 系・原則手を入れない） |
+
+## エージェントの振る舞い
+
+1. **計画**: 機能変更・複数ファイル変更の前に、目的・前提・3〜6 ステップ・検証手順を短く示す
+2. **確認**: 仕様が曖昧なときは仮定で進めず、短く質問する
+3. **検証**: 変更後は可能なら `pnpm lint` を実行。型は `pnpm exec tsc --noEmit`（プロジェクトに tsc スクリプトが無い場合）
+4. **Git**: ユーザーが明示しない限り **コミット・push しない**
+5. **秘密情報**: `.env` や API キーを出力・コミットしない
+
+## 開発コマンド
+
+```bash
+pnpm install
+pnpm dev      # 開発サーバー
+pnpm build    # 本番ビルド
+pnpm start    # 本番起動
+pnpm lint     # ESLint
+pnpm exec tsc --noEmit   # 型チェック
+```
+
+## 既知の制約（GEMINI.md より）
+
+- `next.config.mjs` は TS ビルドエラー無視・画像最適化無効
+- マルチプレイは `hooks/use-multiplayer.ts` が基盤。本番では Socket.IO / WebSocket バックエンドへ置き換え想定
+- ネットワーク対戦の同期・収益化（広告）は未整備領域として慎重に設計する
+
+## ドキュメント・ログ（拡張時）
+
+大きな機能や設計変更では、必要に応じて `docs/` を整備してから実装する。
+
+- `docs/development_progress.md` に作業ログ（日付・担当・タスク・変更ファイル・次アクション）
+- 12 項目セルフレビューは `@self-review` ルールを参照

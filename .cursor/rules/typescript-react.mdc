@@ -1,0 +1,41 @@
+---
+description: TypeScript・React・Next.js App Router の実装規約
+globs: app/**/*.{ts,tsx},components/**/*.{ts,tsx},hooks/**/*.{ts,tsx},lib/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# TypeScript / React / Next.js
+
+## 型・モジュール
+
+- `strict` を前提に、`any` や不要な型アサーションを避ける
+- 共有型は `lib/mahjong-types.ts` に集約。ゲームロジックの型を UI に散らさない
+- import は `@/` エイリアスを優先（相対パスは同ディレクトリ内など最小限）
+
+## React / Next.js
+
+- クライアントコンポーネントはファイル先頭に `'use client'`（必要なファイルのみ）
+- 状態: ゲームは `lib/game-store.ts`、マルチプレイは `lib/multiplayer-store.ts` + `hooks/use-multiplayer.ts`
+- Zustand はセレクタで必要なスライスのみ購読（例: `useMultiplayerStore((s) => s.status)`）
+- UI プリミティブは `components/ui/` を再利用。新規 UI は Tailwind + 既存 `cn()` / CVA パターンに合わせる
+
+## スタイル
+
+- Tailwind CSS 4。レスポンシブは `md:` 等の既存ブレークポイントに合わせる
+- ゲーム画面はタッチ操作・モバイル縦横を意識（タップ領域・文字サイズ）
+- アニメーションは既存クラス（例: `animate-pulse-glow`）を優先し、過剰な motion を避ける
+
+## やってはいけないこと
+
+- `components/ui/` の一括スタイル変更や shadcn 再生成（依頼がない限り）
+- ゲームロジックを `page.tsx` や UI コンポーネントに直書き（`lib/game-engine.ts` へ）
+- 本番未使用の巨大依存を「念のため」追加
+
+## 変更後の確認
+
+```bash
+pnpm lint
+pnpm exec tsc --noEmit
+```
+
+UI 変更時は `pnpm dev` でメニュー・シングル・マルチプレイの主要導線を目視確認する。

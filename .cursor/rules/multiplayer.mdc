@@ -1,0 +1,43 @@
+---
+description: マルチプレイヤー・ロビー・同期・Socket.IO 連携の実装ルール
+globs: lib/multiplayer-store.ts,hooks/use-multiplayer.ts,components/game/multiplayer-*.tsx
+alwaysApply: false
+---
+
+# マルチプレイヤー
+
+## 現状
+
+- クライアント状態: `lib/multiplayer-store.ts`（接続、部屋、チャット、試合スナップショット）
+- 接続・同期: `hooks/use-multiplayer.ts` → Socket.IO `server/index.ts`
+- サーバー権威ロジック: `lib/multiplayer-game-logic.ts` + `server/room-manager.ts`
+- プロトコル型: `lib/multiplayer-protocol.ts`
+- UI: `multiplayer-lobby.tsx`（参加・観戦）, `multiplayer-game.tsx`（対戦・観戦表示）
+
+## 設計原則
+
+- **本番想定**: モックの固定ルーム ID や常に成功する偽同期は作らない。未接続時は明示的なエラー・再接続 UI
+- サーバー権威: スコア・勝敗・牌面の真実はサーバー側で決定し、クライアントは表示と入力に徹する（実装時）
+- ストア更新は単一の流れにまとめ、レースコンディションを避ける
+- チャット・プレゼンス・ルーム一覧はストアの既存フィールド設計に合わせて拡張
+
+## 実装時チェックリスト
+
+- [x] 切断・再接続・タイムアウトの UX（セッション resume・接続状態表示）
+- [x] 二重入室・幽霊プレイヤーの防止（サーバー側セッション・socket 単一绑定）
+- [x] ゲーム中の状態同期（サーバー権威・match:state ブロードキャスト）
+- [x] 秘密情報（トークン）をクライアントにハードコードしない（`.env` + セッション発行）
+- [x] シングルプレイ（`game-store.ts`）とマルチの状態が混線しない（マルチは server snapshot のみ）
+- [x] 観戦モード（読み取り専用・最大20人）
+
+## 検証
+
+```bash
+# ターミナル1
+pnpm dev:server
+
+# ターミナル2
+pnpm dev
+```
+
+ロビー作成 → 入室 → 対戦開始 → 終了ダイアログ → メニュー復帰。別ブラウザで観戦・2人同時接続を確認。

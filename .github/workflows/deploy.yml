@@ -1,0 +1,62 @@
+name: Deploy to ECS
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write   # OIDC 認証に必要
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      # 型チェック & Lint
+      - run: pnpm exec tsc --noEmit
+
+      # AWS OIDC 認証
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::513855545944:role/PaijangGitHubActionsRole
+          aws-region: ap-northeast-1
+
+      # ECR ログイン
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # イメージビルド & プッシュ
+      - name: Build and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/paijang-server:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/paijang-server:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/paijang-server:$IMAGE_TAG $ECR_REGISTRY/paijang-server:latest
+          docker push $ECR_REGISTRY/paijang-server:latest
+
+      # ECS サービス強制デプロイ
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster paijang-cluster \
+            --service paijang-server \
+            --force-new-deployment \
+            --region ap-northeast-1

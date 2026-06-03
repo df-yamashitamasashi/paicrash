@@ -1,0 +1,41 @@
+---
+description: 麻雀パズルのゲームエンジン・牌型・役・スコアの実装ルール
+globs: lib/game-engine.ts,lib/mahjong-types.ts,lib/yaku-data.ts,lib/game-store.ts,components/game/**/*
+alwaysApply: false
+---
+
+# ゲームドメイン（麻雀パズル）
+
+## 責務分離
+
+- **ロジック**: `lib/game-engine.ts` — ボード生成、3枚組・連番マッチ、役検出、クリア判定
+- **型**: `lib/mahjong-types.ts` — `MahjongTile`, `GameBoard`, `Yaku` 等。牌の同一性は `areTilesEqual` / `getTileKey` を使う
+- **役データ**: `lib/yaku-data.ts` — `YAKU_DEFINITIONS`, `createYaku` 等
+- **UI**: `components/game/` — 表示と入力のみ。判定・スコア計算は lib に委譲
+
+## 麻雀ルールの整合性
+
+- 数牌（萬子・筒子・索子）と字牌（風・三元）の区別を型で表現する
+- ドラ・指示牌まわりは `generateRandomIndicator` / `getDoraTile` の既存仕様に合わせる
+- 役追加・変更時は `yaku-data.ts` と `game-engine.ts` の両方の整合を確認する
+- ランダム牌 ID は既存パターン（`Date.now()` + random）を踏襲する
+
+## ボード定数
+
+`game-engine.ts` の `BOARD_WIDTH` / `BOARD_HEIGHT` を変更する場合は、UI レイアウト（`game-board.tsx` 等）との整合を必ず確認する。
+
+## テスト・検証
+
+ゲームロジック変更時:
+
+1. 3枚組・連番・役成立の代表ケースを手動またはテストで確認
+2. エッジ: 空ボード、満杯、字牌のみ、九種九牌相当の境界
+3. 型チェック: `pnpm exec tsc --noEmit`
+
+将来 `lib/game-engine.ts` 向けユニットテスト追加を推奨（GEMINI.md の次ステップ）。
+
+## UI/UX（ゲーム画面）
+
+- 牌は `components/game/tile.tsx` 経由で一貫表示
+- 役ガイドは `yaku-guide.tsx` と `yaku-data.ts` の内容が一致すること
+- フィードバック（マッチ・役成立・ゲームオーバー）は明確な文言と視覚的フィードバック
