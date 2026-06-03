@@ -170,16 +170,26 @@ export default function MahjongPuzzleGame() {
               </div>
             )}
             <div className="text-center space-y-4">
-              <div className="flex items-center justify-center gap-3">
-                <TileLogoIcon className="h-8 w-8 text-primary animate-pulse-glow" />
-                <h1 className="text-4xl md:text-6xl font-extrabold text-primary tracking-tight drop-shadow-md">
-                  PaiCrash
+              <div className="flex items-center justify-center gap-4">
+                {/* 左側のアンティーク風装飾ライン */}
+                <div className="hidden sm:block h-[1px] w-12 bg-gradient-to-r from-transparent to-primary/60" />
+                
+                <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight drop-shadow-sm select-none">
+                  {/* 高級感のあるグラデーションタイトル */}
+                  <span className="bg-gradient-to-r from-primary via-[#b35e38] to-primary bg-clip-text text-transparent">
+                    PaiCrash
+                  </span>
                 </h1>
-                <TileLogoIcon className="h-8 w-8 text-primary animate-pulse-glow" />
+
+                {/* 右側のアンティーク風装飾ライン */}
+                <div className="hidden sm:block h-[1px] w-12 bg-gradient-to-l from-transparent to-primary/60" />
               </div>
-              <p className="text-muted-foreground text-lg font-bold">
-                PaiCrash - マージャン落ち物パズル
-              </p>
+              
+              <div className="space-y-1">
+                <p className="text-primary/95 text-sm md:text-base tracking-[0.25em] font-semibold uppercase">
+                  - Specialty Mahjong Puzzle -
+                </p>
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 w-full max-w-2xl">

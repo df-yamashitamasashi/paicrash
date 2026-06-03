@@ -34,14 +34,19 @@ export function TileLogoIcon({ className, ...props }: IconProps) {
       {...props}
     >
       {/* Pop 3D Shadow */}
-      <rect x="3" y="5" width="18" height="16" rx="5" fill="currentColor" opacity="0.2" />
+      <rect x="3" y="5" width="18" height="16" rx="5" fill="currentColor" opacity="0.15" />
       {/* Main frame */}
       <rect x="3" y="3" width="18" height="16" rx="5" fill="none" stroke="currentColor" strokeWidth="2.5" />
-      {/* Cute smiling face instead of standard dots */}
-      <circle cx="8.5" cy="9" r="1.5" fill="currentColor" />
-      <circle cx="15.5" cy="9" r="1.5" fill="currentColor" />
-      {/* Smile path */}
-      <path d="M8.5 12.5 Q 12 16 15.5 12.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      
+      {/* Coffee Cup body (Pins-like circle base with flat top and bottom) */}
+      <path d="M7 11.5c0 3.2 2 4.5 5 4.5s5-1.3 5-4.5H7z" fill="currentColor" opacity="0.8" />
+      {/* Cup handle */}
+      <path d="M17 11.5c1.2 0 2 .5 2 1.5s-.8 1.5-2 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      {/* Saucer / Plate */}
+      <path d="M6 18h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      {/* Steam rising (elegant minimalist waves) */}
+      <path d="M9.5 8c0-1.5 1-1.5 1-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M13.5 8c0-1.5 1-1.5 1-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
