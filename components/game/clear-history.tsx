@@ -120,12 +120,16 @@ function HistoryRow({ result }: { result: ClearResult }) {
             <span
               key={`${tile.id}-${j}`}
               className={cn(
-                'inline-block rounded px-1 py-0.5 font-bold leading-none',
+                'inline-flex items-baseline rounded px-1 py-0.5 font-bold leading-none gap-0.5',
                 'bg-white/80 border border-gray-200 shadow-sm',
                 tileColor(tile.suit),
               )}
+              title={`消去座標: (${tile.x}, ${tile.y})`}
             >
-              {getTileDisplay(tile)}
+              <span>{getTileDisplay(tile)}</span>
+              <span className="text-[9px] font-normal text-muted-foreground/80 opacity-80" style={{ letterSpacing: '-0.5px' }}>
+                ({tile.x},{tile.y})
+              </span>
             </span>
           ))}
       </div>
