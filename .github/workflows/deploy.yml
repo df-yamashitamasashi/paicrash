@@ -33,7 +33,7 @@ jobs:
       # AWS OIDC 認証
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::513855545944:role/PaijangGitHubActionsRole
+          role-to-assume: arn:aws:iam::513855545944:role/paicrashgGitHubActionsRole
           aws-region: ap-northeast-1
 
       # ECR ログイン
@@ -47,16 +47,16 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/paijang-server:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/paijang-server:$IMAGE_TAG
-          docker tag $ECR_REGISTRY/paijang-server:$IMAGE_TAG $ECR_REGISTRY/paijang-server:latest
-          docker push $ECR_REGISTRY/paijang-server:latest
+          docker build -t $ECR_REGISTRY/paicrashg-server:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/paicrashg-server:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/paicrashg-server:$IMAGE_TAG $ECR_REGISTRY/paicrashg-server:latest
+          docker push $ECR_REGISTRY/paicrashg-server:latest
 
       # ECS サービス強制デプロイ
       - name: Deploy to ECS
         run: |
           aws ecs update-service \
-            --cluster paijang-cluster \
-            --service paijang-server \
+            --cluster paicrashg-cluster \
+            --service paicrashg-server \
             --force-new-deployment \
             --region ap-northeast-1

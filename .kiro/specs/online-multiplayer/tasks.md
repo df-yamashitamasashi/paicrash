@@ -2,7 +2,7 @@
 
 ## Overview
 
-paijang オンライン対戦機能のデプロイ・インフラ・テスト・UI 拡張に関する実装タスク一覧。
+paicrashg オンライン対戦機能のデプロイ・インフラ・テスト・UI 拡張に関する実装タスク一覧。
 コンテナ化（タスク 1〜2）→ AWS CDK インフラ（タスク 3〜6）→ CI/CD（タスク 7）→ 戦績レポート UI（タスク 8〜10）→ 環境変数ドキュメント（タスク 11）→ テスト（タスク 12〜16）の順で実装する。
 
 ## Task Dependency Graph
@@ -45,7 +45,7 @@ paijang オンライン対戦機能のデプロイ・インフラ・テスト・
 - [x] 4. InfraStack 実装
   - `cdk/lib/infra-stack.ts` を作成する
   - VPC を実装する（パブリックサブネット 2AZ、`natGateways: 0` でコスト削減）
-  - ECR リポジトリ `paijang-server` を実装する（`removalPolicy: RETAIN`）
+  - ECR リポジトリ `paicrashg-server` を実装する（`removalPolicy: RETAIN`）
   - ACM 証明書を実装する（DNS 検証、ALB と同リージョン）
   - 環境変数 `ENABLE_WAF=true` の場合のみ WAF WebACL を実装する（IP レート制限 + AWSManagedRulesCommonRuleSet）
   - VPC・ECR・ACM・WAF を他スタックから参照できるよう `public readonly` プロパティとして公開する
@@ -100,7 +100,7 @@ paijang オンライン対戦機能のデプロイ・インフラ・テスト・
   - 対戦終了後の画面に「レポートをダウンロード」ボタンを表示する
   - ボタンクリック時に `BattleReport` オブジェクトをクライアントサイドで生成し、`JSON.stringify` で JSON 化する
   - `URL.createObjectURL` と `<a download>` を使ってブラウザのダウンロード機能でファイルを保存する
-  - ファイル名を `paijang-battle-{roomId}-{YYYYMMDD}.json` 形式とする
+  - ファイル名を `paicrashg-battle-{roomId}-{YYYYMMDD}.json` 形式とする
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6_
   - _Depends on: 9_
 

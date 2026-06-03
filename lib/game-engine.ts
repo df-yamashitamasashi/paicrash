@@ -28,14 +28,15 @@ export function generateRandomTile(x: number = 0, y: number = 0, debugIndex?: nu
         ? orphans[debugIndex % orphans.length]
         : orphans[Math.floor(Math.random() * orphans.length)];
 
-      return {
+      const tile: MahjongTile = {
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         suit: selected.suit,
-        number: selected.number,
-        honor: selected.honor,
         x,
         y,
       };
+      if (selected.number !== undefined) tile.number = selected.number;
+      if (selected.honor !== undefined) tile.honor = selected.honor;
+      return tile;
     } else if (val === 101) {
       // Nine Gates required sequence (14 tiles in total)
       const pinzu: Array<{ suit: TileSuit; number?: TileNumber; honor?: HonorType }> = [
@@ -51,14 +52,15 @@ export function generateRandomTile(x: number = 0, y: number = 0, debugIndex?: nu
         ? pinzu[debugIndex % pinzu.length]
         : pinzu[Math.floor(Math.random() * pinzu.length)];
 
-      return {
+      const tile: MahjongTile = {
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         suit: selected.suit,
-        number: selected.number,
-        honor: selected.honor,
         x,
         y,
       };
+      if (selected.number !== undefined) tile.number = selected.number;
+      if (selected.honor !== undefined) tile.honor = selected.honor;
+      return tile;
     } else if (val === 102) {
       // All Honors required sequence (14 tiles in total)
       const honors: Array<{ suit: TileSuit; number?: TileNumber; honor?: HonorType }> = [
@@ -75,14 +77,15 @@ export function generateRandomTile(x: number = 0, y: number = 0, debugIndex?: nu
         ? honors[debugIndex % honors.length]
         : honors[Math.floor(Math.random() * honors.length)];
 
-      return {
+      const tile: MahjongTile = {
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         suit: selected.suit,
-        number: selected.number,
-        honor: selected.honor,
         x,
         y,
       };
+      if (selected.number !== undefined) tile.number = selected.number;
+      if (selected.honor !== undefined) tile.honor = selected.honor;
+      return tile;
     }
   }
 

@@ -31,6 +31,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
     matchSnapshot,
     lastGameOver,
     isServerConnected,
+    currentRoom,
     sendGameInput,
     sendMessage,
     leaveRoom,
@@ -50,6 +51,62 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
   );
 
   const { animBoard: playerAnimBoard, isAnimating: isPlayerAnimating } = useYakumanAnimation(mySnapshot?.gameState ?? null, !isSpectator);
+
+  // Touch handling refs
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const touchLastX = useRef<number | null>(null);
+  const touchStartTime = useRef<number>(0);
+  const lastDropTime = useRef<number>(0);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (isSpectator || mySnapshot?.gameState?.isGameOver || isPlayerAnimating) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    touchLastX.current = e.touches[0].clientX;
+    touchStartTime.current = Date.now();
+  }, [isSpectator, mySnapshot, isPlayerAnimating]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (isSpectator || mySnapshot?.gameState?.isGameOver || isPlayerAnimating) return;
+    if (touchStartX.current === null || touchLastX.current === null || touchStartY.current === null) return;
+    
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const deltaX = currentX - touchLastX.current;
+    const deltaY = currentY - touchStartY.current;
+
+    const cellWidth = 32;
+    const now = Date.now();
+
+    if (Math.abs(deltaX) >= cellWidth * 0.8) {
+      if (deltaX > 0) void sendGameInput('move-right');
+      else void sendGameInput('move-left');
+      touchLastX.current = currentX;
+    }
+    
+    if (deltaY > cellWidth * 1.5 && now - lastDropTime.current > 150) {
+      void sendGameInput('soft-drop');
+      touchStartY.current = currentY;
+      lastDropTime.current = now;
+    }
+  }, [isSpectator, mySnapshot, isPlayerAnimating, sendGameInput]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (isSpectator || mySnapshot?.gameState?.isGameOver || isPlayerAnimating) return;
+    if (touchStartY.current !== null && touchStartX.current !== null) {
+      const currentY = e.changedTouches[0].clientY;
+      const deltaY = currentY - touchStartY.current;
+      const deltaTime = Date.now() - touchStartTime.current;
+      
+      if (deltaY > 50 && (deltaY / deltaTime) > 0.8) {
+        void sendGameInput('hard-drop');
+      }
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+    touchLastX.current = null;
+  }, [isSpectator, mySnapshot, isPlayerAnimating, sendGameInput]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -138,6 +195,13 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
           <h2 className="text-xl font-bold">観戦モード</h2>
           <Badge variant="outline">READ ONLY</Badge>
         </div>
+
+        {currentRoom?.spectators && currentRoom.spectators.length > 0 && (
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Eye className="h-4 w-4" />
+            <span>観戦中: {currentRoom.spectators.map(s => s.name).join(', ')}</span>
+          </div>
+        )}
 
         {!isServerConnected && (
           <Alert variant="destructive" className="max-w-lg">
@@ -233,6 +297,14 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
         </div>
       </div>
 
+      {/* 観戦者一覧 (PC) */}
+      {currentRoom?.spectators && currentRoom.spectators.length > 0 && (
+        <div className="flex items-center justify-center gap-2 mb-2 text-sm text-muted-foreground w-full">
+          <Eye className="h-4 w-4" />
+          <span>観戦中: {currentRoom.spectators.map(s => s.name).join(', ')}</span>
+        </div>
+      )}
+
       <div className="flex flex-row gap-4 lg:gap-8 items-start w-full max-w-full justify-center">
         <div className="flex flex-col items-center gap-4">
           <GameBoardComponent
@@ -293,6 +365,14 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
           </div>
         )}
         
+        {/* 観戦者一覧 (Mobile) */}
+        {currentRoom?.spectators && currentRoom.spectators.length > 0 && (
+          <div className="flex items-center justify-center gap-1 bg-card/80 py-1 text-[10px] text-muted-foreground shrink-0 border-b border-border">
+            <Eye className="h-3 w-3" />
+            <span>{currentRoom.spectators.map(s => s.name).join(', ')}</span>
+          </div>
+        )}
+
         {/* Compact header: Score vs Score */}
         <div className="flex items-center justify-between px-3 py-2 bg-card/50 border-b border-border shrink-0">
           <div className="flex flex-col">
@@ -348,7 +428,13 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
 
         {/* Game boards area */}
         <div className="flex-1 flex flex-row items-stretch justify-center p-2 min-h-0 gap-2 w-full max-w-full">
-          <div className="flex-1 flex items-center justify-center min-w-0">
+          <div 
+            className="flex-1 flex items-center justify-center min-w-0 touch-none"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
+          >
             <GameBoardComponent
               board={playerAnimBoard || myState.board}
               currentTile={playerAnimBoard ? null : myState.currentTile}

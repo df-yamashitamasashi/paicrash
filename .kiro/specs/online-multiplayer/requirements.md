@@ -2,7 +2,7 @@
 
 ## Introduction
 
-本ドキュメントは、麻雀パズル落ちゲー「paijang」のオンライン対戦機能に関する要件を定義する。
+本ドキュメントは、麻雀パズル落ちゲー「paicrashg」のオンライン対戦機能に関する要件を定義する。
 
 既存の Socket.IO サーバー（`server/index.ts`）、ルーム管理（`server/room-manager.ts`）、セキュリティ（`server/security.ts`）、クライアント側フック（`hooks/use-multiplayer.ts`）の実装を前提とし、**AWS へのデプロイ**・**ローカル/オンライン切り替え**・**戦績レポート**・**セキュリティ強化**・**観戦機能**の要件を明確化する。
 
@@ -12,7 +12,7 @@
 
 ## Glossary
 
-- **System**：paijang オンライン対戦システム全体
+- **System**：paicrashg オンライン対戦システム全体
 - **Server**：Node.js + Socket.IO で実装されたリアルタイムサーバー（`server/index.ts`）
 - **Client**：Next.js フロントエンド（ブラウザ）
 - **RoomManager**：ルーム・セッション・ゲームロジックを管理するサーバーサイドモジュール（`server/room-manager.ts`）
@@ -157,7 +157,7 @@
 1. WHEN 対戦が終了したとき、THE Server SHALL 対戦結果（ルーム ID・対戦開始日時・対戦終了日時・勝者名・全プレイヤーのニックネームとスコア）を `match:ended` イベントのペイロードとしてクライアントに送信する
 2. THE Client SHALL 対戦終了後に「レポートをダウンロード」ボタンを表示し、WHEN プレイヤーがボタンをクリックしたとき、THE Client SHALL 対戦結果データを JSON 形式でクライアントサイドで生成してブラウザのダウンロード機能でファイルを保存する
 3. THE System SHALL レポートデータをデータベースに永続化しない（クライアントサイド生成のみ）
-4. THE System SHALL レポートファイル名を `paijang-battle-{roomId}-{YYYYMMDD}.json` の形式とする
+4. THE System SHALL レポートファイル名を `paicrashg-battle-{roomId}-{YYYYMMDD}.json` の形式とする
 5. THE System SHALL レポートに含める情報を以下に限定する：ルーム名・ルーム ID・対戦開始日時（ISO 8601）・対戦終了日時（ISO 8601）・勝者ニックネーム・各プレイヤーのニックネームとスコア
 6. THE System SHALL レポートに個人を特定できる情報（IP アドレス・メールアドレス等）を含めない
 

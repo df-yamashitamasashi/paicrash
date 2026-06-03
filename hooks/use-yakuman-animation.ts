@@ -12,8 +12,9 @@ export function useYakumanAnimation(gameState: GameState | null, isPlayer: boole
     if (!gameState) return;
     
     // Check if new clears happened
-    if (gameState.clearHistory.length > prevClearHistoryLength.current) {
-      const newClears = gameState.clearHistory.slice(prevClearHistoryLength.current);
+    const clearHistory = gameState.clearHistory || [];
+    if (clearHistory.length > prevClearHistoryLength.current) {
+      const newClears = clearHistory.slice(prevClearHistoryLength.current);
       
       const yakumanClear = newClears.find(r => 
         r.yaku?.name === 'Thirteen Orphans' || 
@@ -50,7 +51,7 @@ export function useYakumanAnimation(gameState: GameState | null, isPlayer: boole
          }, 9000);
       }
     }
-    prevClearHistoryLength.current = gameState.clearHistory.length;
+    prevClearHistoryLength.current = clearHistory.length;
   }, [gameState, isPlayer]);
 
   return { animBoard, isAnimating: isAnimatingRef.current };

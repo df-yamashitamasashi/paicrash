@@ -1,198 +1,292 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
-import { io, type Socket } from 'socket.io-client';
-import type { GameInputAction, MatchSnapshot } from '@/lib/multiplayer-protocol';
-import {
-  ClientEvents,
-  ServerEvents,
-} from '@/lib/multiplayer-protocol';
-import {
-  SESSION_STORAGE_KEY,
-  useMultiplayerStore,
-} from '@/lib/multiplayer-store';
+import { db } from '@/lib/firebase';
+import { ref, onValue, set, update, push, onDisconnect, get, serverTimestamp, runTransaction, remove } from 'firebase/database';
+import type { GameInputAction, MatchSnapshot, PublicRoom, RoomMemberRole, ChatMessagePayload, GameOverPayload, PlayerMatchSnapshot } from '@/lib/multiplayer-protocol';
+import { SESSION_STORAGE_KEY, useMultiplayerStore } from '@/lib/multiplayer-store';
 import { audio } from '@/lib/audio-manager';
-
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL ?? 'http://localhost:3001';
-
-function emitWithAck<T>(socket: Socket, event: string, payload: unknown): Promise<T> {
-  return new Promise((resolve, reject) => {
-    socket.timeout(10_000).emit(event, payload, (err: Error | null, response: T) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(response);
-    });
-  });
-}
-
-function attachSocketListeners(socket: Socket): void {
-  const store = () => useMultiplayerStore.getState();
-
-  socket.on('connect', () => {
-    store().setServerConnected(true);
-    store().setError(null);
-    
-    const savedToken = typeof window !== 'undefined' ? localStorage.getItem(SESSION_STORAGE_KEY) : null;
-    if (savedToken && store().status !== 'reconnecting') {
-      socket.emit(ClientEvents.SESSION_RESUME, { sessionToken: savedToken }, (res: any) => {
-        if (!res?.ok) {
-           store().setStatus('disconnected');
-           if (typeof window !== 'undefined') localStorage.removeItem(SESSION_STORAGE_KEY);
-        }
-      });
-    }
-  });
-
-  socket.on('disconnect', () => {
-    store().setServerConnected(false);
-  });
-
-  socket.on('connect_error', () => {
-    store().setError('ゲームサーバーに接続できません。しばらくしてから再度お試しください。');
-    if (store().status === 'connecting' || store().status === 'reconnecting') {
-      store().setStatus('disconnected');
-    }
-  });
-
-  socket.on(ServerEvents.SESSION_CREATED, (info) => {
-    store().setPlayerId(info.playerId);
-    store().setPlayerName(info.playerName);
-    store().setSessionToken(info.sessionToken);
-  });
-
-  socket.on(ServerEvents.SESSION_RESUMED, (info) => {
-    store().setPlayerId(info.playerId);
-    store().setPlayerName(info.playerName);
-    store().setSessionToken(info.sessionToken);
-    store().setRole(info.role);
-    
-    const room = store().currentRoom;
-    if (info.role === 'spectator') {
-      store().setStatus('spectating');
-    } else if (info.roomId) {
-      if (room?.id === info.roomId && room?.isStarted) {
-        store().setStatus('playing');
-      } else {
-        store().setStatus('in-room');
-      }
-    } else {
-      store().setStatus('connected');
-    }
-  });
-
-  socket.on(ServerEvents.ROOM_LIST, (rooms) => {
-    store().setAvailableRooms(rooms);
-  });
-
-  socket.on(ServerEvents.ROOM_UPDATED, (room) => {
-    store().setCurrentRoom(room);
-    if (store().role === 'spectator') {
-      store().setStatus(room.isStarted && store().matchSnapshot ? 'spectating' : 'in-room');
-    }
-  });
-
-  socket.on(ServerEvents.CHAT_MESSAGE, (message) => {
-    store().addMessage(message);
-  });
-
-  socket.on(ServerEvents.MATCH_STARTED, (match) => {
-    store().setMatchSnapshot(match);
-    store().setLastGameOver(null);
-    audio.enable();
-    audio.startBgm();
-    if (store().role === 'spectator') {
-      store().setStatus('spectating');
-    } else {
-      store().setStatus('playing');
-    }
-  });
-
-  socket.on(ServerEvents.MATCH_STATE, (match: MatchSnapshot) => {
-    const prevMatch = store().matchSnapshot;
-    store().setMatchSnapshot(match);
-
-    // Audio SFX for local player events in multiplayer
-    const myId = store().playerId;
-    const prevMe = prevMatch?.players.find((p) => p.playerId === myId)?.gameState;
-    const currentMe = match.players.find((p) => p.playerId === myId)?.gameState;
-
-    if (currentMe && prevMe) {
-      // If score increased, a match was cleared
-      if (currentMe.score > prevMe.score) {
-        const hasNewYaku = currentMe.lastYaku && currentMe.lastYaku !== prevMe.lastYaku;
-        if (hasNewYaku) {
-          audio.playYaku();
-        } else {
-          audio.playClear(currentMe.combo);
-        }
-      } else if (!currentMe.currentTile || currentMe.currentTile.id !== prevMe.currentTile?.id) {
-        // Tile was placed
-        audio.playPlace();
-      }
-      
-      // If position changed, play move
-      if (currentMe.currentTile && prevMe.currentTile && 
-         (currentMe.currentTile.x !== prevMe.currentTile.x || currentMe.currentTile.y !== prevMe.currentTile.y)) {
-        if (currentMe.currentTile.x !== prevMe.currentTile.x) {
-          audio.playMove();
-        }
-      }
-    }
-  });
-
-  socket.on(ServerEvents.MATCH_ENDED, (gameOver) => {
-    store().setLastGameOver(gameOver);
-    audio.playGameOver();
-    audio.stopBgm();
-    if (store().role === 'spectator') {
-      store().setStatus('spectating');
-    } else {
-      store().setStatus('in-room');
-    }
-  });
-
-  socket.on(ServerEvents.ERROR, (payload: { code: string; message: string }) => {
-    store().setError(payload.message);
-  });
-}
-
-let globalSocket: Socket | null = null;
+import { applyGameInput, createInitialMultiplayerGameState, flushGarbageQueue, getTickIntervalMs } from '@/lib/multiplayer-game-logic';
 
 export function useMultiplayer() {
   const store = useMultiplayerStore();
+  
+  const localGameStateRef = useRef<any>(null);
+  const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
+  const listenersRef = useRef<Array<() => void>>([]);
 
-  const getSocket = useCallback(() => {
-    if (globalSocket) {
-      return globalSocket;
-    }
-
-    const socket = io(SOCKET_URL, {
-      autoConnect: false,
-      withCredentials: true,
-      reconnection: true,
-      reconnectionAttempts: 8,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 8000,
-    });
-
-    attachSocketListeners(socket);
-    globalSocket = socket;
-    return socket;
+  const cleanupListeners = useCallback(() => {
+    listenersRef.current.forEach(unsub => unsub());
+    listenersRef.current = [];
   }, []);
 
-  const connectSocket = useCallback(async () => {
-    const socket = getSocket();
-    if (socket.connected) return socket;
-
-    socket.connect();
-    await new Promise<void>((resolve, reject) => {
-      socket.once('connect', () => resolve());
-      socket.once('connect_error', (err) => reject(err));
+  const setupRoomListeners = useCallback((roomId: string) => {
+    cleanupListeners();
+    
+    const roomRef = ref(db, `rooms/${roomId}`);
+    const unsubRoom = onValue(roomRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        store.setCurrentRoom(null);
+        store.setStatus('connected');
+        return;
+      }
+      
+      const data = snapshot.val();
+      const playersList = data.players ? Object.values(data.players) as any[] : [];
+      const spectatorsList = data.spectators ? Object.values(data.spectators) as any[] : [];
+      
+      const formattedRoom: PublicRoom = {
+        ...data,
+        players: playersList,
+        spectators: spectatorsList,
+        spectatorCount: spectatorsList.length
+      };
+      
+      store.setCurrentRoom(formattedRoom);
+      
+      const current = useMultiplayerStore.getState();
+      if (current.role === 'spectator') {
+        store.setStatus(data.isStarted ? 'spectating' : 'in-room');
+      } else if (current.role === 'player') {
+        if (data.isStarted && current.status === 'in-room') {
+          store.setStatus('playing');
+        } else if (!data.isStarted && current.status === 'playing') {
+          store.setStatus('in-room');
+        }
+      }
     });
-    return socket;
-  }, [getSocket]);
+    listenersRef.current.push(() => unsubRoom());
+
+    const chatRef = ref(db, `rooms/${roomId}/chat`);
+    const unsubChat = onValue(chatRef, (snapshot) => {
+      if (!snapshot.exists()) return;
+      const msgs = Object.values(snapshot.val()) as ChatMessagePayload[];
+      msgs.sort((a, b) => a.timestamp - b.timestamp);
+      store.clearMessages(); // Reset and add all
+      msgs.forEach(m => store.addMessage(m));
+    });
+    listenersRef.current.push(() => unsubChat());
+
+    const matchRef = ref(db, `rooms/${roomId}/match`);
+    const unsubMatch = onValue(matchRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        store.setMatchSnapshot(null);
+        return;
+      }
+      const data = snapshot.val();
+      const playersList = data.players ? Object.values(data.players) as PlayerMatchSnapshot[] : [];
+      
+      // Reconstruct sparse arrays/objects from Firebase into real dense 2D arrays of nulls
+      playersList.forEach(p => {
+        if (p.gameState?.board) {
+          const oldTiles: any = p.gameState.board.tiles || [];
+          const newTiles: any[][] = [];
+          for (let y = 0; y < p.gameState.board.height; y++) {
+            const newRow: any[] = [];
+            const oldRow = oldTiles[y];
+            for (let x = 0; x < p.gameState.board.width; x++) {
+              const cell = oldRow ? oldRow[x] : null;
+              newRow.push(cell === undefined ? null : cell);
+            }
+            newTiles.push(newRow);
+          }
+          p.gameState.board.tiles = newTiles;
+        }
+      });
+      
+      const matchSnapshotObj: MatchSnapshot = {
+        roomId,
+        startedAt: data.startedAt,
+        winnerId: data.winnerId || null,
+        players: playersList
+      };
+      
+      const prevMatch = store.matchSnapshot;
+      store.setMatchSnapshot(matchSnapshotObj);
+      
+      const myId = store.playerId;
+      if (myId) {
+        const prevMe = prevMatch?.players.find(p => p.playerId === myId)?.gameState;
+        const currentMe = playersList.find(p => p.playerId === myId)?.gameState;
+        
+        if (currentMe && prevMe) {
+          if (currentMe.score > prevMe.score) {
+            const hasNewYaku = currentMe.lastYaku && currentMe.lastYaku !== prevMe.lastYaku;
+            if (hasNewYaku) {
+              audio.playYaku();
+            } else {
+              audio.playClear(currentMe.combo);
+            }
+          } else if (!currentMe.currentTile || currentMe.currentTile.id !== prevMe.currentTile?.id) {
+            audio.playPlace();
+          }
+          if (currentMe.currentTile && prevMe.currentTile && 
+             (currentMe.currentTile.x !== prevMe.currentTile.x || currentMe.currentTile.y !== prevMe.currentTile.y)) {
+            if (currentMe.currentTile.x !== prevMe.currentTile.x) {
+              audio.playMove();
+            }
+          }
+        }
+      }
+      
+      const current = useMultiplayerStore.getState();
+      
+      if (!prevMatch && matchSnapshotObj) {
+        // Match started
+        store.setLastGameOver(null);
+        audio.enable();
+        audio.startBgm();
+        
+        if (current.role === 'player') {
+          store.setStatus('playing');
+          // Initialize local game state
+          const myPlayer = matchSnapshotObj.players.find(p => p.playerId === myId);
+          if (myPlayer && myId) {
+            localGameStateRef.current = myPlayer.gameState;
+            startGameLoop(roomId, myId);
+          }
+        }
+      }
+    });
+    listenersRef.current.push(() => unsubMatch());
+
+    const gameOverRef = ref(db, `rooms/${roomId}/gameOver`);
+    const unsubGameOver = onValue(gameOverRef, (snapshot) => {
+      if (!snapshot.exists()) return;
+      const data = snapshot.val() as GameOverPayload;
+      
+      const prevGameOver = store.lastGameOver;
+      if (!prevGameOver || prevGameOver.endedAt !== data.endedAt) {
+        store.setLastGameOver(data);
+        audio.playGameOver();
+        audio.stopBgm();
+        stopGameLoop();
+        
+        const current = useMultiplayerStore.getState();
+        if (current.role === 'player') {
+          store.setStatus('in-room');
+        }
+      }
+    });
+    listenersRef.current.push(() => unsubGameOver());
+    
+  }, [cleanupListeners, store]);
+
+  const startGameLoop = useCallback((roomId: string, playerId: string) => {
+    stopGameLoop();
+    
+    const runTick = () => {
+      if (!localGameStateRef.current || localGameStateRef.current.isGameOver) return;
+      
+      let state = localGameStateRef.current;
+      
+      // Flush garbage
+      const { state: flushedState } = flushGarbageQueue(state);
+      state = flushedState;
+      
+      const { state: newState, garbageSent, changed } = applyGameInput(state, 'soft-drop');
+      
+      if (changed || state !== flushedState) {
+        localGameStateRef.current = newState;
+        
+        // Sync to firebase (strip undefined)
+        update(ref(db, `rooms/${roomId}/match/players/${playerId}`), {
+          gameState: JSON.parse(JSON.stringify(newState))
+        });
+        
+        // Send garbage to opponent
+        if (garbageSent > 0) {
+          const matchSnapshot = useMultiplayerStore.getState().matchSnapshot;
+          const opponent = matchSnapshot?.players.find(p => p.playerId !== playerId);
+          if (opponent) {
+            const oppRef = ref(db, `rooms/${roomId}/match/players/${opponent.playerId}/gameState/garbageQueue`);
+            runTransaction(oppRef, (currentVal) => {
+              return (currentVal || 0) + garbageSent;
+            });
+          }
+        }
+        
+        // Check game over
+        if (newState.isGameOver) {
+          handleGameOver(roomId, playerId);
+        }
+      }
+      
+      const ms = getTickIntervalMs(newState.level);
+      gameLoopRef.current = setTimeout(runTick, ms);
+    };
+    
+    gameLoopRef.current = setTimeout(runTick, getTickIntervalMs(1));
+  }, []);
+
+  const stopGameLoop = useCallback(() => {
+    if (gameLoopRef.current) {
+      clearTimeout(gameLoopRef.current);
+      gameLoopRef.current = null;
+    }
+  }, []);
+
+  const handleGameOver = useCallback(async (roomId: string, loserId: string) => {
+    const matchSnapshot = useMultiplayerStore.getState().matchSnapshot;
+    if (!matchSnapshot) return;
+    
+    const opponent = matchSnapshot.players.find(p => p.playerId !== loserId);
+    const winnerId = opponent ? opponent.playerId : loserId;
+    const winnerName = opponent ? opponent.playerName : 'Unknown';
+    
+    const payload: GameOverPayload = {
+      roomId,
+      winnerId,
+      winnerName,
+      scores: matchSnapshot.players.map(p => ({
+        playerId: p.playerId,
+        playerName: p.playerName,
+        score: p.gameState.score
+      })),
+      startedAt: matchSnapshot.startedAt,
+      endedAt: Date.now(),
+      roomName: useMultiplayerStore.getState().currentRoom?.name || 'Room'
+    };
+    
+    await update(ref(db, `rooms/${roomId}`), {
+      isStarted: false,
+      gameOver: payload
+    });
+  }, []);
+
+  // Use effects for global room list
+  useEffect(() => {
+    const roomsRef = ref(db, 'rooms');
+    const unsub = onValue(roomsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        store.setAvailableRooms([]);
+        return;
+      }
+      const rooms = Object.values(data) as any[];
+      const available = rooms.map(r => ({
+        id: r.id,
+        name: r.name,
+        playerCount: r.players ? Object.keys(r.players).length : 0,
+        maxPlayers: r.maxPlayers,
+        spectatorCount: r.spectators ? Object.keys(r.spectators).length : 0,
+        maxSpectators: r.maxSpectators,
+        isStarted: r.isStarted,
+        createdAt: r.createdAt
+      }));
+      store.setAvailableRooms(available);
+    });
+    
+    // Listen to connection state
+    const unsubConnected = onValue(ref(db, '.info/connected'), (snap) => {
+      store.setServerConnected(snap.val() === true);
+    });
+    
+    return () => {
+      unsub();
+      unsubConnected();
+    };
+  }, []);
 
   const connect = useCallback(async (playerName: string) => {
     store.setStatus('connecting');
@@ -200,30 +294,24 @@ export function useMultiplayer() {
     store.setPlayerName(playerName);
 
     try {
-      const socket = await connectSocket();
-      const response = await emitWithAck<{
-        ok: boolean;
-        session?: { playerId: string; playerName: string; sessionToken: string };
-        error?: { message: string };
-      }>(socket, ClientEvents.SESSION_CREATE, { playerName });
-
-      if (!response.ok || !response.session) {
-        store.setError(response.error?.message ?? '接続に失敗しました。');
-        store.setStatus('disconnected');
-        return false;
-      }
-
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(SESSION_STORAGE_KEY, response.session.sessionToken);
-      }
+      const playerId = Math.random().toString(36).slice(2, 10);
+      const sessionToken = playerId + '-' + Date.now();
+      
+      store.setPlayerId(playerId);
+      store.setSessionToken(sessionToken);
       store.setStatus('connected');
+      
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(SESSION_STORAGE_KEY, sessionToken);
+      }
       return true;
-    } catch {
-      store.setError('ゲームサーバーに接続できません。');
+    } catch (err) {
+      console.error('Connect error:', err);
+      store.setError(`Firebase接続エラー: ${err}`);
       store.setStatus('disconnected');
       return false;
     }
-  }, [connectSocket, store]);
+  }, [store]);
 
   const resumeSession = useCallback(async () => {
     if (typeof window === 'undefined') return false;
@@ -231,164 +319,214 @@ export function useMultiplayer() {
     if (!savedToken) return false;
 
     store.setStatus('reconnecting');
+    const playerId = savedToken.split('-')[0];
 
-    try {
-      const socket = await connectSocket();
-      const response = await emitWithAck<{ ok: boolean }>(
-        socket,
-        ClientEvents.SESSION_RESUME,
-        { sessionToken: savedToken },
-      );
-
-      if (!response.ok) {
-        localStorage.removeItem(SESSION_STORAGE_KEY);
-        store.setStatus('disconnected');
-        return false;
-      }
-
-      store.setSessionToken(savedToken);
-      return true;
-    } catch {
-      store.setStatus('disconnected');
-      return false;
-    }
-  }, [connectSocket, store]);
+    store.setSessionToken(savedToken);
+    store.setPlayerId(playerId);
+    store.setStatus('connected');
+    return true;
+  }, [store]);
 
   const disconnect = useCallback(() => {
-    globalSocket?.disconnect();
-    globalSocket = null;
     if (typeof window !== 'undefined') {
       localStorage.removeItem(SESSION_STORAGE_KEY);
     }
     store.reset();
-  }, [store]);
+    cleanupListeners();
+    stopGameLoop();
+  }, [store, cleanupListeners, stopGameLoop]);
 
   const createRoom = useCallback(async (roomName: string) => {
-    const token = store.sessionToken;
-    if (!token) return false;
+    const { playerId, playerName } = store;
+    if (!playerId) return false;
 
-    const response = await emitWithAck<{ ok: boolean; error?: { message: string } }>(
-      getSocket(),
-      ClientEvents.ROOM_CREATE,
-      { sessionToken: token, roomName },
-    );
+    const roomId = Math.random().toString(36).slice(2, 8).toUpperCase();
+    const roomRef = ref(db, `rooms/${roomId}`);
+    
+    const newRoom = {
+      id: roomId,
+      name: roomName,
+      maxPlayers: 2,
+      maxSpectators: 10,
+      isStarted: false,
+      createdAt: Date.now(),
+      players: {
+        [playerId]: {
+          id: playerId,
+          name: playerName,
+          isReady: false,
+          isHost: true,
+          score: 0,
+          isConnected: true
+        }
+      }
+    };
 
-    if (!response.ok) {
-      store.setError(response.error?.message ?? '部屋を作成できませんでした。');
-      return false;
-    }
+    await set(roomRef, newRoom);
+    
+    // Setup onDisconnect
+    onDisconnect(ref(db, `rooms/${roomId}/players/${playerId}`)).remove();
 
     store.setRole('player');
     store.setStatus('in-room');
+    setupRoomListeners(roomId);
     return true;
-  }, [getSocket, store]);
+  }, [store, setupRoomListeners]);
 
   const joinRoom = useCallback(async (roomId: string) => {
-    const token = store.sessionToken;
-    if (!token) return false;
+    const { playerId, playerName } = store;
+    if (!playerId) return false;
 
-    const response = await emitWithAck<{ ok: boolean; error?: { message: string } }>(
-      getSocket(),
-      ClientEvents.ROOM_JOIN,
-      { sessionToken: token, roomId },
-    );
-
-    if (!response.ok) {
-      store.setError(response.error?.message ?? '部屋に参加できませんでした。');
-      return false;
-    }
+    const playerRef = ref(db, `rooms/${roomId}/players/${playerId}`);
+    await set(playerRef, {
+      id: playerId,
+      name: playerName,
+      isReady: false,
+      isHost: false,
+      score: 0,
+      isConnected: true
+    });
+    
+    onDisconnect(playerRef).remove();
 
     store.setRole('player');
     store.setStatus('in-room');
     store.clearMessages();
+    setupRoomListeners(roomId);
     return true;
-  }, [getSocket, store]);
+  }, [store, setupRoomListeners]);
 
   const spectateRoom = useCallback(async (roomId: string) => {
-    const token = store.sessionToken;
-    if (!token) return false;
+    const { playerId, playerName } = store;
+    if (!playerId) return false;
 
-    const response = await emitWithAck<{ ok: boolean; error?: { message: string } }>(
-      getSocket(),
-      ClientEvents.ROOM_SPECTATE,
-      { sessionToken: token, roomId },
-    );
-
-    if (!response.ok) {
-      store.setError(response.error?.message ?? '観戦できませんでした。');
-      return false;
-    }
+    const specRef = ref(db, `rooms/${roomId}/spectators/${playerId}`);
+    await set(specRef, {
+      id: playerId,
+      name: playerName,
+      isConnected: true
+    });
+    
+    onDisconnect(specRef).remove();
 
     store.setRole('spectator');
     store.clearMessages();
+    setupRoomListeners(roomId);
     return true;
-  }, [getSocket, store]);
+  }, [store, setupRoomListeners]);
 
   const leaveRoom = useCallback(async () => {
-    const token = store.sessionToken;
-    if (!token) return;
+    const { playerId, currentRoom, role } = store;
+    if (!playerId || !currentRoom) return;
 
-    await emitWithAck(getSocket(), ClientEvents.ROOM_LEAVE, { sessionToken: token });
+    if (role === 'player') {
+      await remove(ref(db, `rooms/${currentRoom.id}/players/${playerId}`));
+    } else {
+      await remove(ref(db, `rooms/${currentRoom.id}/spectators/${playerId}`));
+    }
+
     audio.stopBgm();
+    stopGameLoop();
+    cleanupListeners();
+    
     store.setCurrentRoom(null);
     store.setRole(null);
     store.setMatchSnapshot(null);
     store.setLastGameOver(null);
     store.setStatus('connected');
     store.clearMessages();
-  }, [getSocket, store]);
+  }, [store, cleanupListeners, stopGameLoop]);
 
   const toggleReady = useCallback(async () => {
-    const token = store.sessionToken;
-    const room = store.currentRoom;
-    const playerId = store.playerId;
-    if (!token || !room || !playerId) return;
+    const { playerId, currentRoom } = store;
+    if (!playerId || !currentRoom) return;
 
-    const me = room.players.find((p) => p.id === playerId);
+    const me = currentRoom.players.find(p => p.id === playerId);
     const nextReady = !me?.isReady;
 
-    await emitWithAck(getSocket(), ClientEvents.ROOM_READY, {
-      sessionToken: token,
-      isReady: nextReady,
+    await update(ref(db, `rooms/${currentRoom.id}/players/${playerId}`), {
+      isReady: nextReady
     });
-  }, [getSocket, store]);
+  }, [store]);
 
   const startGame = useCallback(async () => {
-    const token = store.sessionToken;
-    if (!token) return;
-
-    const response = await emitWithAck<{ ok: boolean; error?: { message: string } }>(
-      getSocket(),
-      ClientEvents.ROOM_START,
-      { sessionToken: token },
-    );
-
-    if (!response.ok) {
-      store.setError(response.error?.message ?? 'ゲームを開始できませんでした。');
+    const { currentRoom } = store;
+    if (!currentRoom) return;
+    
+    // Ensure all are ready
+    if (!currentRoom.players.every(p => p.isReady)) {
+      store.setError('全員が準備完了になっていません');
+      return;
     }
-  }, [getSocket, store]);
+
+    const roomId = currentRoom.id;
+    const players: Record<string, PlayerMatchSnapshot> = {};
+    
+    for (const p of currentRoom.players) {
+      players[p.id] = {
+        playerId: p.id,
+        playerName: p.name,
+        gameState: JSON.parse(JSON.stringify(createInitialMultiplayerGameState()))
+      };
+    }
+
+    const matchData = {
+      startedAt: Date.now(),
+      winnerId: null,
+      players
+    };
+
+    const updates: any = {};
+    updates[`rooms/${roomId}/match`] = matchData;
+    updates[`rooms/${roomId}/isStarted`] = true;
+    updates[`rooms/${roomId}/gameOver`] = null;
+
+    await update(ref(db), updates);
+  }, [store]);
 
   const sendMessage = useCallback(async (text: string) => {
-    const token = store.sessionToken;
-    if (!token || !text.trim()) return;
+    const { playerId, playerName, currentRoom, role } = store;
+    if (!playerId || !currentRoom || !text.trim()) return;
 
-    await emitWithAck(getSocket(), ClientEvents.CHAT_SEND, {
-      sessionToken: token,
+    const newMsgRef = push(ref(db, `rooms/${currentRoom.id}/chat`));
+    await set(newMsgRef, {
+      id: newMsgRef.key,
+      playerId,
+      playerName,
       text: text.trim(),
+      timestamp: Date.now(),
+      role: role || 'system'
     });
-  }, [getSocket, store]);
+  }, [store]);
 
   const sendGameInput = useCallback(async (action: GameInputAction) => {
-    const current = useMultiplayerStore.getState();
-    if (!current.sessionToken || current.role !== 'player' || current.status !== 'playing') return;
+    const { playerId, currentRoom, role, status, matchSnapshot } = useMultiplayerStore.getState();
+    if (role !== 'player' || status !== 'playing' || !currentRoom || !playerId || !localGameStateRef.current) return;
 
-    await emitWithAck(getSocket(), ClientEvents.GAME_INPUT, {
-      sessionToken: current.sessionToken,
-      action,
-    });
-  }, [getSocket]);
+    const { state: newState, garbageSent, changed } = applyGameInput(localGameStateRef.current, action);
+    
+    if (changed) {
+      localGameStateRef.current = newState;
+      
+      update(ref(db, `rooms/${currentRoom.id}/match/players/${playerId}`), {
+        gameState: JSON.parse(JSON.stringify(newState))
+      });
 
-  // Removed unmount cleanup to prevent socket disconnect on route/component change
+      if (garbageSent > 0) {
+        const opponent = matchSnapshot?.players.find(p => p.playerId !== playerId);
+        if (opponent) {
+          const oppRef = ref(db, `rooms/${currentRoom.id}/match/players/${opponent.playerId}/gameState/garbageQueue`);
+          runTransaction(oppRef, (currentVal) => {
+            return (currentVal || 0) + garbageSent;
+          });
+        }
+      }
+
+      if (newState.isGameOver) {
+        handleGameOver(currentRoom.id, playerId);
+      }
+    }
+  }, [handleGameOver]);
 
   return {
     status: store.status,

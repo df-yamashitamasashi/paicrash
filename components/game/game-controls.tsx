@@ -32,24 +32,16 @@ export function GameControls({
 }: GameControlsProps) {
   if (isMobile) {
     return (
-      <div className="flex flex-col gap-2">
-        {/* Top row: Hard drop + action buttons */}
-        <div className="flex gap-2">
-          <Button
-            onClick={onHardDrop}
-            disabled={isPaused || isGameOver}
-            className="flex-1 h-10 bg-yellow-200 hover:bg-yellow-300 text-yellow-950 font-bold border-none"
-          >
-            <ChevronsDown className="h-4 w-4 mr-1" />
-            ドロップ
-          </Button>
+      <div className="flex flex-col gap-3 pb-2">
+        {/* Action bar */}
+        <div className="flex gap-2 justify-end">
           {!hidePause && (
           <Button
             variant="outline"
             size="icon"
             onClick={onPause}
             disabled={isGameOver}
-            className="h-10 w-10 shrink-0"
+            className="h-10 w-10 shrink-0 rounded-full bg-card/80 backdrop-blur-sm"
           >
             {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
           </Button>
@@ -59,7 +51,7 @@ export function GameControls({
             variant="outline"
             size="icon"
             onClick={onReset}
-            className="h-10 w-10 shrink-0"
+            className="h-10 w-10 shrink-0 rounded-full bg-card/80 backdrop-blur-sm"
           >
             <RotateCcw className="h-4 w-4" />
           </Button>
@@ -68,34 +60,46 @@ export function GameControls({
             variant="outline"
             size="icon"
             onClick={onShowGuide}
-            className="h-10 w-10 shrink-0"
+            className="h-10 w-10 shrink-0 rounded-full bg-card/80 backdrop-blur-sm"
           >
             <HelpCircle className="h-4 w-4" />
           </Button>
         </div>
+
+        {/* Hard Drop Row */}
+        <div className="flex px-4">
+          <Button
+            onClick={onHardDrop}
+            disabled={isPaused || isGameOver}
+            className="flex-1 h-12 bg-yellow-200/90 hover:bg-yellow-300 text-yellow-950 font-bold border-none rounded-xl text-lg shadow-lg active:scale-95 transition-transform"
+          >
+            <ChevronsDown className="h-5 w-5 mr-1" />
+            HARD DROP
+          </Button>
+        </div>
         
         {/* Bottom row: Direction controls */}
-        <div className="flex gap-2">
+        <div className="flex gap-3 px-2">
           <Button
             onClick={() => onMove('left')}
             disabled={isPaused || isGameOver}
-            className="flex-1 h-12 text-lg bg-yellow-200 hover:bg-yellow-300 text-yellow-950 border-none"
+            className="flex-1 h-16 text-xl bg-blue-200/90 hover:bg-blue-300 text-blue-950 border-none rounded-xl shadow-lg active:scale-95 transition-transform"
           >
-            <ArrowLeft className="h-6 w-6" />
+            <ArrowLeft className="h-8 w-8" />
           </Button>
           <Button
             onClick={onDrop}
             disabled={isPaused || isGameOver}
-            className="flex-1 h-12 text-lg bg-yellow-200 hover:bg-yellow-300 text-yellow-950 border-none"
+            className="flex-1 h-16 text-xl bg-slate-200/90 hover:bg-slate-300 text-slate-950 border-none rounded-xl shadow-lg active:scale-95 transition-transform"
           >
-            <ArrowDown className="h-6 w-6" />
+            <ArrowDown className="h-8 w-8" />
           </Button>
           <Button
             onClick={() => onMove('right')}
             disabled={isPaused || isGameOver}
-            className="flex-1 h-12 text-lg bg-yellow-200 hover:bg-yellow-300 text-yellow-950 border-none"
+            className="flex-1 h-16 text-xl bg-blue-200/90 hover:bg-blue-300 text-blue-950 border-none rounded-xl shadow-lg active:scale-95 transition-transform"
           >
-            <ArrowRight className="h-6 w-6" />
+            <ArrowRight className="h-8 w-8" />
           </Button>
         </div>
       </div>

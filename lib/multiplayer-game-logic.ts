@@ -71,7 +71,7 @@ function processClearsOnBoard(
         chainCount,
         state.doraIndicator,
         state.uraDoraIndicator,
-        [...state.clearHistory, ...allResults]
+        [...(state.clearHistory || []), ...allResults]
       );
       allResults = allResults.concat(results);
       totalScore += calculateScore(results);
@@ -169,7 +169,7 @@ function placeCurrentTile(state: GameState): ApplyInputResult {
       garbageQueue: newGarbageQueue,
       isGameOver: gameOver,
       lastYaku,
-      clearHistory: [...state.clearHistory, ...allResults].slice(-10),
+      clearHistory: [...(state.clearHistory || []), ...allResults].slice(-10),
       debugTileIndex: (isDebug && state.debugTileIndex !== undefined) ? nextIdx : undefined,
     },
     garbageSent,

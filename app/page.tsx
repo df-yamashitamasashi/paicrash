@@ -165,7 +165,7 @@ export default function MahjongPuzzleGame() {
           <div className="flex flex-col items-center justify-center min-h-[80vh] gap-8 relative pt-12">
             {session?.user && (
               <div className="absolute top-0 right-0 flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="hidden md:inline">{session.user.email}</span>
+                <span className="hidden md:inline">{session.user.name || session.user.email}</span>
                 <Button variant="outline" size="sm" onClick={() => { playClick(); signOut(); }}>ログアウト</Button>
               </div>
             )}

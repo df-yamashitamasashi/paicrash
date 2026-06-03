@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { MahjongTile, getTileKey, TILE_DISPLAY } from '@/lib/mahjong-types';
 import { cn } from '@/lib/utils';
 
@@ -165,7 +166,7 @@ function SouzuBamboo({ number, size }: { number: number; size: 'sm' | 'md' | 'lg
   );
 }
 
-export function Tile({ tile, size = 'md', isGhost = false, isClearing = false, isYakuman = false, isYakumanDissolving = false, onClick }: TileProps) {
+export const Tile = React.memo(function Tile({ tile, size = 'md', isGhost = false, isClearing = false, isYakuman = false, isYakumanDissolving = false, onClick }: TileProps) {
   const sizeClass = sizeClasses[size];
   const isOjama = tile.suit === 'ojama';
   const isHonor = tile.suit === 'honor';
@@ -275,7 +276,7 @@ export function Tile({ tile, size = 'md', isGhost = false, isClearing = false, i
       />
     </div>
   );
-}
+});
 
 export function TilePreview({ tile, label }: { tile: MahjongTile | null; label: string }) {
   return (

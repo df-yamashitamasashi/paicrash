@@ -80,7 +80,7 @@ export default function InvitePage() {
         </div>
         
         <p className="mt-6 text-center text-xs text-slate-500">
-          © {new Date().getFullYear()} paijang. All rights reserved.
+          © {new Date().getFullYear()} paicrash. All rights reserved.
         </p>
       </div>
     </div>

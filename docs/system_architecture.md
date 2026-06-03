@@ -34,7 +34,7 @@ graph TB
         WAF[AWS WAF<br/>IP Rate Limit + AWSManagedRulesCommonRuleSet]
         ALB[Application Load Balancer<br/>HTTPS :443 / ACM 証明書]
         Task[ECS Fargate Task<br/>Socket.IO Server<br/>0.25vCPU / 512MB :3001]
-        ECR[ECR<br/>paijang-server image]
+        ECR[ECR<br/>paicrash-server image]
         CW[CloudWatch<br/>Memory Alarm > 80%]
     end
 

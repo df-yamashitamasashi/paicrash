@@ -2,7 +2,7 @@
 
 ## Overview
 
-paijang のオンライン対戦機能は、既存の Socket.IO サーバー実装を AWS 本番環境へデプロイし、
+paicrashg のオンライン対戦機能は、既存の Socket.IO サーバー実装を AWS 本番環境へデプロイし、
 ローカル LAN とインターネット越しの両方で同一クライアントコードで動作させるシステムである。
 
 主な責務：
@@ -64,7 +64,7 @@ graph TB
         end
 
         subgraph Registry[ECR]
-            ECR[Container Image<br/>paijang-server]
+            ECR[Container Image<br/>paicrashg-server]
         end
 
         subgraph Monitoring[CloudWatch]
@@ -352,7 +352,7 @@ interface BattleReport {
 }
 ```
 
-**ファイル名形式：** `paijang-battle-{roomId}-{YYYYMMDD}.json`
+**ファイル名形式：** `paicrashg-battle-{roomId}-{YYYYMMDD}.json`
 
 ### ChatMessagePayload（プロトコル型）
 
@@ -394,7 +394,7 @@ cdk/
 
 **InfraStack**（変更頻度低）：
 - VPC（パブリックサブネット 2AZ）
-- ECR リポジトリ（`paijang-server`）
+- ECR リポジトリ（`paicrashg-server`）
 - ACM 証明書（ドメイン検証）
 - WAF WebACL（ALB アタッチ用）
 
@@ -424,7 +424,7 @@ export class InfraStack extends Stack {
 
     // ECR
     this.repository = new Repository(this, 'ServerRepo', {
-      repositoryName: 'paijang-server',
+      repositoryName: 'paicrashg-server',
       removalPolicy: RemovalPolicy.RETAIN,
     });
 
@@ -491,7 +491,7 @@ export class AppStack extends Stack {
         PORT: '3001',
         ALLOWED_ORIGINS: 'https://your-frontend.vercel.app',
       },
-      logging: LogDrivers.awsLogs({ streamPrefix: 'paijang-server' }),
+      logging: LogDrivers.awsLogs({ streamPrefix: 'paicrashg-server' }),
     });
 
     // Fargate Service（desired: 1）
@@ -652,17 +652,17 @@ jobs:
           ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-1.amazonaws.com
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/paijang-server:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/paijang-server:$IMAGE_TAG
-          docker tag $ECR_REGISTRY/paijang-server:$IMAGE_TAG $ECR_REGISTRY/paijang-server:latest
-          docker push $ECR_REGISTRY/paijang-server:latest
+          docker build -t $ECR_REGISTRY/paicrashg-server:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/paicrashg-server:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/paicrashg-server:$IMAGE_TAG $ECR_REGISTRY/paicrashg-server:latest
+          docker push $ECR_REGISTRY/paicrashg-server:latest
 
       # ECS サービス強制デプロイ
       - name: Deploy to ECS
         run: |
           aws ecs update-service \
-            --cluster paijang-cluster \
-            --service paijang-server \
+            --cluster paicrashg-cluster \
+            --service paicrashg-server \
             --force-new-deployment \
             --region ap-northeast-1
 ```
@@ -680,7 +680,7 @@ new Role(this, 'GitHubActionsRole', {
     StringEquals: {
       'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
       'token.actions.githubusercontent.com:sub':
-        'repo:your-org/paijang:ref:refs/heads/main',
+        'repo:your-org/paicrashg:ref:refs/heads/main',
     },
   }),
   managedPolicies: [
@@ -732,7 +732,7 @@ taskDef.addContainer('Server', {
   environment: {
     PORT: '3001',
     ALLOWED_ORIGINS: ssm.StringParameter.valueForStringParameter(
-      this, '/paijang/prod/ALLOWED_ORIGINS'
+      this, '/paicrashg/prod/ALLOWED_ORIGINS'
     ),
   },
 });
@@ -790,7 +790,7 @@ export function safeEqualToken(a: string, b: string): boolean {
 ```
 
 - セッショントークンはサーバーログに出力しない
-- クライアントは `localStorage` に保存（`SESSION_STORAGE_KEY = 'paijang.sessionToken'`）
+- クライアントは `localStorage` に保存（`SESSION_STORAGE_KEY = 'paicrashg.sessionToken'`）
 - TTL 24 時間、期限切れ時は自動削除
 
 ### 入力サニタイズ

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import React, { useRef, useMemo } from 'react';
 import type { GameBoard, MahjongTile } from '@/lib/mahjong-types';
 import { Tile } from './tile';
 import { cn } from '@/lib/utils';
@@ -17,7 +17,7 @@ interface GameBoardProps {
   countdown?: number | null;
 }
 
-export function GameBoardComponent({
+export const GameBoardComponent = React.memo(function GameBoardComponent({
   board,
   currentTile,
   isGameOver = false,
@@ -40,11 +40,11 @@ export function GameBoardComponent({
   
   // Calculate ghost position (where tile will land)
   const ghostY = useMemo(() => {
-    if (!currentTile) return null;
+    if (!currentTile || !board?.tiles) return null;
     const x = currentTile.x;
     
     for (let y = 0; y < board.height; y++) {
-      if (board.tiles[y][x] !== null) {
+      if (board.tiles[y]?.[x]) {
         return y - 1;
       }
     }
@@ -97,8 +97,8 @@ export function GameBoardComponent({
       
       {/* Placed tiles */}
       <div className="absolute inset-2">
-        {board.tiles.map((row, y) =>
-          row.map((tile, x) =>
+        {board.tiles?.map((row, y) =>
+          row?.map((tile, x) =>
             tile ? (
               <div
                 key={tile.id}
@@ -195,4 +195,4 @@ export function GameBoardComponent({
       </div>
     </div>
   );
-}
+});

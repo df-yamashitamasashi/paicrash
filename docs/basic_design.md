@@ -175,7 +175,7 @@ interface BattleReport {
 }
 ```
 
-- ファイル名: `paijang-battle-{roomId}-{YYYYMMDD}.json`
+- ファイル名: `paicrash-battle-{roomId}-{YYYYMMDD}.json`
 - 個人情報（IP アドレス・メールアドレス等）は含めない
 - DB への永続化なし（クライアントサイド生成のみ）
 

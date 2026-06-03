@@ -97,4 +97,4 @@ export const useMultiplayerStore = create<MultiplayerState>((set) => ({
   reset: () => set(initialState),
 }));
 
-export const SESSION_STORAGE_KEY = 'paijang.sessionToken';
+export const SESSION_STORAGE_KEY = 'paicrash.sessionToken';

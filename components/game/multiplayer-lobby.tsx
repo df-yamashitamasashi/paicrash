@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useMultiplayer } from '@/hooks/use-multiplayer';
+import { useMultiplayerStore } from '@/lib/multiplayer-store';
 import { cn } from '@/lib/utils';
 import {
   ConnectIcon,
@@ -52,11 +54,12 @@ export function MultiplayerLobby({ onBack }: MultiplayerLobbyProps) {
     sendMessage,
   } = useMultiplayer();
 
-  const [nameInput, setNameInput] = useState('');
+  const { data: session } = useSession();
   const [roomNameInput, setRoomNameInput] = useState('');
   const [chatInput, setChatInput] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [resumeAttempted, setResumeAttempted] = useState(false);
+  const autoConnectAttempted = useRef(false);
 
   useEffect(() => {
     if (resumeAttempted) return;
@@ -64,11 +67,18 @@ export function MultiplayerLobby({ onBack }: MultiplayerLobbyProps) {
     void resumeSession();
   }, [resumeAttempted, resumeSession]);
 
-  const handleConnect = async () => {
-    if (nameInput.trim()) {
-      await connect(nameInput.trim());
+  useEffect(() => {
+    if (session?.user?.name && status === 'disconnected' && resumeAttempted && !autoConnectAttempted.current) {
+      autoConnectAttempted.current = true;
+      void connect(session.user.name);
     }
-  };
+  }, [session, status, resumeAttempted, connect]);
+
+  useEffect(() => {
+    if (session?.user?.name && !playerName) {
+      useMultiplayerStore.getState().setPlayerName(session.user.name);
+    }
+  }, [session?.user?.name, playerName]);
 
   const handleCreateRoom = async () => {
     if (roomNameInput.trim()) {
@@ -90,9 +100,9 @@ export function MultiplayerLobby({ onBack }: MultiplayerLobbyProps) {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
         <div className="text-center mb-4">
           <h2 className="text-2xl font-bold text-primary mb-2">オンライン対戦</h2>
-          <p className="text-muted-foreground">ニックネームを入力してサーバーに接続</p>
+          <p className="text-muted-foreground">サーバーに接続中...</p>
           <p className="text-xs text-muted-foreground mt-2">
-            対戦・観戦ともにリアルタイムサーバー経由です
+            Googleアカウントのユーザー名を使用します
           </p>
         </div>
 
@@ -105,31 +115,9 @@ export function MultiplayerLobby({ onBack }: MultiplayerLobbyProps) {
         <Card className="w-full max-w-sm">
           <CardContent className="pt-6">
             <div className="flex flex-col gap-4">
-              <Input
-                placeholder="ニックネーム（2〜16文字）"
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleConnect()}
-                disabled={status === 'connecting' || status === 'reconnecting'}
-                maxLength={16}
-              />
-              <Button
-                onClick={handleConnect}
-                disabled={!nameInput.trim() || status === 'connecting' || status === 'reconnecting'}
-                className="w-full"
-              >
-                {status === 'connecting' || status === 'reconnecting' ? (
-                  <>
-                    <ConnectIcon className="h-4 w-4 mr-2 animate-spin" />
-                    接続中...
-                  </>
-                ) : (
-                  <>
-                    <ConnectIcon className="h-4 w-4 mr-2" />
-                    接続
-                  </>
-                )}
-              </Button>
+              <div className="flex justify-center py-4">
+                <ConnectIcon className="h-8 w-8 animate-spin text-primary" />
+              </div>
               <Button onClick={onBack} className="w-full bg-yellow-200 hover:bg-yellow-300 text-yellow-950 font-bold border-none">
                 <LeaveIcon className="h-4 w-4 mr-2" />
                 戻る

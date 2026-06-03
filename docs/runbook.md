@@ -133,16 +133,16 @@ aws ecr get-login-password --region ap-northeast-1 | \
   ${AWS_ACCOUNT_ID}.dkr.ecr.ap-northeast-1.amazonaws.com
 
 # イメージビルド & プッシュ
-docker build -t paijang-server .
-docker tag paijang-server:latest \
-  ${AWS_ACCOUNT_ID}.dkr.ecr.ap-northeast-1.amazonaws.com/paijang-server:latest
+docker build -t paicrash-server .
+docker tag paicrash-server:latest \
+  ${AWS_ACCOUNT_ID}.dkr.ecr.ap-northeast-1.amazonaws.com/paicrash-server:latest
 docker push \
-  ${AWS_ACCOUNT_ID}.dkr.ecr.ap-northeast-1.amazonaws.com/paijang-server:latest
+  ${AWS_ACCOUNT_ID}.dkr.ecr.ap-northeast-1.amazonaws.com/paicrash-server:latest
 
 # ECS 強制デプロイ
 aws ecs update-service \
-  --cluster paijang-cluster \
-  --service paijang-server \
+  --cluster paicrash-cluster \
+  --service paicrash-server \
   --force-new-deployment \
   --region ap-northeast-1
 ```
@@ -170,7 +170,7 @@ aws ecs update-service \
 
 ### セッションが復元されない
 
-1. ブラウザの localStorage に `paijang.sessionToken` が存在するか確認
+1. ブラウザの localStorage に `paicrash.sessionToken` が存在するか確認
 2. サーバーが再起動していた場合はセッションが消滅（仕様）→ 新規接続フローへ
 
 ### ゲームが重い / カクつく
@@ -193,8 +193,8 @@ aws ecs update-service \
 
 ```bash
 aws ecs update-service \
-  --cluster paijang-cluster \
-  --service paijang-server \
+  --cluster paicrash-cluster \
+  --service paicrash-server \
   --force-new-deployment \
   --region ap-northeast-1
 ```
@@ -204,7 +204,7 @@ aws ecs update-service \
 ### CloudWatch ログ確認
 
 ```bash
-aws logs tail /ecs/paijang-server --follow --region ap-northeast-1
+aws logs tail /ecs/paicrash-server --follow --region ap-northeast-1
 ```
 
 ---
@@ -216,7 +216,7 @@ aws logs tail /ecs/paijang-server --follow --region ap-northeast-1
 
 ```bash
 # 前バージョンのイメージタグを確認
-aws ecr list-images --repository-name paijang-server --region ap-northeast-1
+aws ecr list-images --repository-name paicrash-server --region ap-northeast-1
 
 # タスク定義を更新して前バージョンを指定（CDK または手動）
 ```
