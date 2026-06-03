@@ -9,3 +9,4 @@ cdk
 tests
 .env*
 !.env.example
+!.env.production
