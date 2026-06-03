@@ -25,6 +25,8 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
     winner, 
     startMatch, 
     sendPlayerInput,
+    isPaused,
+    togglePause,
     cpuSpeed,
     setCpuSpeed,
     countdown
@@ -37,7 +39,14 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (!playerState || playerState.isGameOver || isGameOver) return;
+      if (!playerState || playerState.isGameOver || isGameOver) {
+        // Allow reset even when game is over
+        if (e.key === 'r' || e.key === 'R') {
+          e.preventDefault();
+          startMatch();
+        }
+        return;
+      }
 
       switch (e.key) {
         case 'ArrowLeft':
@@ -52,6 +61,16 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
           e.preventDefault();
           sendPlayerInput('hard-drop');
           break;
+        case 'p':
+        case 'P':
+          e.preventDefault();
+          togglePause();
+          break;
+        case 'r':
+        case 'R':
+          e.preventDefault();
+          startMatch();
+          break;
         case 'h':
         case 'H':
           e.preventDefault();
@@ -59,7 +78,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
           break;
       }
     },
-    [playerState, sendPlayerInput, isGameOver],
+    [playerState, sendPlayerInput, isGameOver, togglePause, startMatch],
   );
 
   useEffect(() => {
@@ -112,7 +131,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
               board={playerAnimBoard || playerState.board}
               currentTile={playerAnimBoard ? null : playerState.currentTile}
               isGameOver={playerState.isGameOver}
-              isPaused={false}
+              isPaused={isPaused}
               countdown={countdown}
             />
           </div>
@@ -157,12 +176,10 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
               onMove={(dir) => sendPlayerInput(dir === 'left' ? 'move-left' : 'move-right')}
               onDrop={() => {}}
               onHardDrop={() => sendPlayerInput('hard-drop')}
-              onPause={() => {}}
-              onReset={() => {}}
-              hidePause={true}
-              hideReset={true}
+              onPause={togglePause}
+              onReset={startMatch}
               onShowGuide={() => setShowGuide(true)}
-              isPaused={false}
+              isPaused={isPaused}
               isGameOver={isGameOver}
             />
           </div>
@@ -262,7 +279,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
                 board={playerState.board}
                 currentTile={playerState.currentTile}
                 isGameOver={playerState.isGameOver}
-                isPaused={false}
+                isPaused={isPaused}
                 isMobile
                 countdown={countdown}
               />
@@ -322,12 +339,10 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
             onMove={(dir) => sendPlayerInput(dir === 'left' ? 'move-left' : 'move-right')}
             onDrop={() => {}}
             onHardDrop={() => sendPlayerInput('hard-drop')}
-            onPause={() => {}}
-            onReset={() => {}}
-            hidePause={true}
-            hideReset={true}
+            onPause={togglePause}
+            onReset={startMatch}
             onShowGuide={() => setShowGuide(true)}
-            isPaused={false}
+            isPaused={isPaused}
             isGameOver={isGameOver}
             isMobile
           />

@@ -27,6 +27,7 @@ export function useCpuGame() {
   const [winner, setWinner] = useState<'player' | 'cpu' | null>(null);
   const [cpuSpeed, setCpuSpeed] = useState<'slow' | 'normal' | 'fast' | 'insane'>('normal');
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
   
   // CPUの思考用タイマー
   const cpuActionTimerRef = useRef(0);
@@ -115,8 +116,20 @@ export function useCpuGame() {
     }, 9000);
   }, []);
 
+  const togglePause = useCallback(() => {
+    if (isGameOver || countdown !== null) return;
+    setIsPaused(prev => {
+      if (prev) {
+        audio.startBgm();
+      } else {
+        audio.stopBgm();
+      }
+      return !prev;
+    });
+  }, [isGameOver, countdown]);
+
   const sendPlayerInput = useCallback((action: GameInputAction) => {
-    if (countdown !== null || isPlayerAnimatingRef.current) return;
+    if (countdown !== null || isPaused || isPlayerAnimatingRef.current) return;
     
     const prev = gameStateRef.current;
     if (!prev.player || prev.player.isGameOver || isGameOver) return;
@@ -163,11 +176,11 @@ export function useCpuGame() {
     const newState = { player: nextPlayer, cpu: nextCpu };
     gameStateRef.current = newState;
     setGameState(newState);
-  }, [isGameOver, countdown]);
+  }, [isGameOver, countdown, isPaused]);
 
   // Player Tick Loop
   useEffect(() => {
-    if (!gameState.player || isGameOver || countdown !== null) return;
+    if (!gameState.player || isGameOver || countdown !== null || isPaused) return;
     const speed = getTickIntervalMs(gameState.player.level);
     
     const interval = setInterval(() => {
@@ -218,11 +231,11 @@ export function useCpuGame() {
     }, speed);
 
     return () => clearInterval(interval);
-  }, [gameState.player?.level, isGameOver, countdown]);
+  }, [gameState.player?.level, isGameOver, countdown, isPaused]);
 
   // CPU Tick Loop & AI (Speed depends on cpuSpeed setting)
   useEffect(() => {
-    if (!gameState.cpu || isGameOver || countdown !== null) return;
+    if (!gameState.cpu || isGameOver || countdown !== null || isPaused) return;
     
     let aiSpeed = 150;
     if (cpuSpeed === 'slow') aiSpeed = 300;
@@ -353,7 +366,7 @@ export function useCpuGame() {
     }, aiSpeed);
 
     return () => clearInterval(interval);
-  }, [gameState.cpu?.level, isGameOver, cpuSpeed, countdown]);
+  }, [gameState.cpu?.level, isGameOver, cpuSpeed, countdown, isPaused]);
 
   // Check Game Over
   useEffect(() => {
@@ -379,6 +392,8 @@ export function useCpuGame() {
     winner,
     startMatch,
     sendPlayerInput,
+    isPaused,
+    togglePause,
     cpuSpeed,
     setCpuSpeed,
     countdown
