@@ -76,6 +76,62 @@ pnpm test
 3. Docker イメージビルド → Artifact Registry プッシュ
 4. Cloud Run サービスデプロイ
 
+#### Workload Identity Federation (WIF) の自動セットアップ手順
+
+GCP と GitHub 間の OIDC 連携を行うため、[GCP Cloud Console](https://console.cloud.google.com/) の右上にある **Cloud Shell** (ターミナルアイコン) を起動し、以下のコマンドをコピー＆ペーストしてそのまま実行します（※プロジェクトID等は自動入力されています）。
+
+```bash
+# プロジェクトIDとGitHubリポジトリ名の定義
+export PROJECT_ID="paicrash-94d0a"
+export REPO_NAME="gYama/paicrash"
+
+# 対象プロジェクトを設定
+gcloud config set project \$PROJECT_ID
+
+# 必要なAPIを有効化します
+gcloud services enable iamcredentials.googleapis.com sts.googleapis.com
+
+# Workload Identity プールを作成します
+gcloud iam workload-identity-pools create "github" \\
+    --project="\${PROJECT_ID}" \\
+    --location="global" \\
+    --display-name="GitHub Actions Pool"
+
+# Workload Identity プロバイダを作成します
+gcloud iam workload-identity-pools providers create-oidc "github-provider" \\
+    --project="\${PROJECT_ID}" \\
+    --location="global" \\
+    --workload-identity-pool="github" \\
+    --display-name="GitHub Provider" \\
+    --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \\
+    --issuer-uri="https://token.actions.githubusercontent.com"
+
+# GitHub専用のサービスアカウントを作成します
+gcloud iam service-accounts create "github-actions" \\
+    --project="\${PROJECT_ID}" \\
+    --display-name="GitHub Actions Deploy SA"
+
+# サービスアカウントにログイン権限を付与します
+gcloud iam service-accounts add-iam-policy-binding "github-actions@\${PROJECT_ID}.iam.gserviceaccount.com" \\
+    --project="\${PROJECT_ID}" \\
+    --role="roles/iam.workloadIdentityUser" \\
+    --member="principalSet://iam.googleapis.com/projects/962090888338/locations/global/workloadIdentityPools/github/attribute.repository/\${REPO_NAME}"
+
+# デプロイに必要な権限を付与します
+gcloud projects add-iam-policy-binding \${PROJECT_ID} --member="serviceAccount:github-actions@\${PROJECT_ID}.iam.gserviceaccount.com" --role="roles/run.admin"
+gcloud projects add-iam-policy-binding \${PROJECT_ID} --member="serviceAccount:github-actions@\${PROJECT_ID}.iam.gserviceaccount.com" --role="roles/storage.admin"
+gcloud projects add-iam-policy-binding \${PROJECT_ID} --member="serviceAccount:github-actions@\${PROJECT_ID}.iam.gserviceaccount.com" --role="roles/artifactregistry.admin"
+gcloud projects add-iam-policy-binding \${PROJECT_ID} --member="serviceAccount:github-actions@\${PROJECT_ID}.iam.gserviceaccount.com" --role="roles/iam.serviceAccountUser"
+```
+
+実行後、GitHub の `Settings -> Secrets and variables -> Actions` に以下の3つの Secrets を登録します：
+
+1. **`GCP_PROJECT_ID`**: `paicrash-94d0a`
+2. **`GCP_WIF_SERVICE_ACCOUNT`**: `github-actions@paicrash-94d0a.iam.gserviceaccount.com`
+3. **`GCP_WIF_PROVIDER`**: `projects/962090888338/locations/global/workloadIdentityPools/github/providers/github-provider`
+
+---
+
 ### データベース (Firebase RTDB)
 
 Firebase Console または Firebase CLI からセキュリティルールをデプロイします。
