@@ -103,7 +103,8 @@ gcloud iam workload-identity-pools providers create-oidc "github-provider" \\
     --location="global" \\
     --workload-identity-pool="github" \\
     --display-name="GitHub Provider" \\
-    --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \\
+    --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \\
+    --attribute-condition="assertion.repository_owner == 'gYama'" \\
     --issuer-uri="https://token.actions.githubusercontent.com"
 
 # GitHub専用のサービスアカウントを作成します

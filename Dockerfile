@@ -1,46 +1,54 @@
 # ============================================================
-# Stage 1: builder — 依存関係インストール + TypeScript コンパイル
+# Stage 1: deps — 依存関係のインストール
+# ============================================================
+FROM node:22-alpine AS deps
+WORKDIR /app
+
+# pnpm を有効化
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# package.json と lockfile のコピー
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
+
+# ============================================================
+# Stage 2: builder — Next.js アプリケーションのビルド
 # ============================================================
 FROM node:22-alpine AS builder
 WORKDIR /app
 
-# pnpm を有効化
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# 依存関係のインストール（lockfile 使用）
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
-# ソースコピー & TypeScript コンパイル
-COPY tsconfig.json tsconfig.server.json ./
-COPY lib/ ./lib/
-COPY server/ ./server/
-RUN pnpm exec tsc --project tsconfig.server.json
+# テレメトリの無効化（オプション）
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Next.js の本番ビルドを実行
+RUN pnpm build
 
 # ============================================================
-# Stage 2: runner — 本番イメージ（devDependencies 除外）
+# Stage 3: runner — 本番用の最小実行イメージ
 # ============================================================
 FROM node:22-alpine AS runner
 WORKDIR /app
 
-# pnpm を有効化
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# 本番依存関係のみインストール
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --prod
-
-# コンパイル済みファイルをコピー
-COPY --from=builder /app/dist ./dist
-
-# 環境変数
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-EXPOSE 3001
+# セキュリティのため、非 root ユーザーで実行
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# 非 root ユーザーで実行（セキュリティ強化）
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
+# ビルド成果物のうち、最小限の実行に必要なファイルのみをコピー
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-CMD ["node", "dist/server/index.js"]
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]
