@@ -15,6 +15,7 @@ interface GameBoardProps {
   scale?: number;
   isMobile?: boolean;
   countdown?: number | null;
+  highlightTiles?: MahjongTile[] | null;
 }
 
 export const GameBoardComponent = React.memo(function GameBoardComponent({
@@ -26,6 +27,7 @@ export const GameBoardComponent = React.memo(function GameBoardComponent({
   scale = 1,
   isMobile = false,
   countdown,
+  highlightTiles,
 }: GameBoardProps) {
   const boardRef = useRef<HTMLDivElement>(null);
   
@@ -120,6 +122,30 @@ export const GameBoardComponent = React.memo(function GameBoardComponent({
           )
         )}
       </div>
+      
+      {/* Highlighted Tiles from History (ghost + border) */}
+      {highlightTiles && highlightTiles.length > 0 && (
+        <div className="absolute inset-2 z-20 pointer-events-none">
+          {highlightTiles.map((tile, i) => (
+            <div
+              key={`highlight-${tile.id}-${i}`}
+              className="absolute transition-all duration-150 animate-pulse"
+              style={{
+                left: tile.x * cellSize,
+                top: tile.y * cellSize,
+              }}
+            >
+              <div className="absolute inset-0 ring-2 ring-primary ring-offset-2 ring-offset-transparent rounded-lg z-10" />
+              <div className="opacity-60">
+                <Tile
+                  tile={tile}
+                  size={tileSize as 'sm' | 'md'}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       
       {/* Ghost tile (landing preview) */}
       {currentTile && ghostY !== null && ghostY >= 0 && !isGameOver && !isPaused && !isYakumanAnimating && !isYakumanDissolving && (

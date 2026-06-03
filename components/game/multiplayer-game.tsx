@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
-import type { GameState } from '@/lib/mahjong-types';
+import type { GameState, MahjongTile } from '@/lib/mahjong-types';
 import type { BattleReport } from '@/lib/multiplayer-protocol';
 import { Eye, Download, FileText } from 'lucide-react';
 import { Tile } from './tile';
@@ -38,6 +38,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
   } = useMultiplayer();
 
   const [showGuide, setShowGuide] = useState(false);
+  const [hoveredTiles, setHoveredTiles] = useState<MahjongTile[] | null>(null);
   const isSpectator = role === 'spectator';
 
   const mySnapshot = useMemo(
@@ -312,6 +313,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
             currentTile={playerAnimBoard ? null : myState.currentTile}
             isGameOver={myState.isGameOver}
             isPaused={false}
+            highlightTiles={hoveredTiles}
           />
         </div>
 
@@ -326,6 +328,8 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
             uraDoraIndicator={myState.uraDoraIndicator}
             lastYaku={myState.lastYaku}
             garbageQueue={myState.garbageQueue}
+            clearHistory={myState.clearHistory}
+            onHoverHistory={setHoveredTiles}
           />
           
           <GameControls
@@ -439,7 +443,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
               board={playerAnimBoard || myState.board}
               currentTile={playerAnimBoard ? null : myState.currentTile}
               isGameOver={myState.isGameOver}
-              isPaused={false}
+              highlightTiles={hoveredTiles}
               isMobile
             />
           </div>

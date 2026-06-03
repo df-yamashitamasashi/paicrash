@@ -16,6 +16,7 @@ interface GameStatsProps {
   lastYaku: Yaku | null;
   garbageQueue?: number;
   clearHistory?: ClearResult[];
+  onHoverHistory?: (tiles: MahjongTile[] | null) => void;
 }
 
 export function GameStats({
@@ -29,6 +30,7 @@ export function GameStats({
   lastYaku,
   garbageQueue = 0,
   clearHistory = [],
+  onHoverHistory,
 }: GameStatsProps) {
   return (
     <div className="flex flex-col gap-4 p-4 bg-card/50 rounded-xl border border-border backdrop-blur-sm">
@@ -73,7 +75,7 @@ export function GameStats({
       )}
 
       {/* Clear history */}
-      <ClearHistory history={clearHistory} />
+      <ClearHistory history={clearHistory} onHoverItem={onHoverHistory} />
     </div>
   );
 }

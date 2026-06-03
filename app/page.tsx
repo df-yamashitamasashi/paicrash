@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useMultiplayerStore } from '@/lib/multiplayer-store';
 import { useMultiplayer } from '@/hooks/use-multiplayer';
 import type { BattleReport } from '@/lib/multiplayer-protocol';
-import { Trophy, Download, Volume2, VolumeX, Music } from 'lucide-react';
+import { Trophy, Download, Volume2, VolumeX, Music, Maximize2 } from 'lucide-react';
 import { TileLogoIcon, SinglePlayerIcon, MultiplayerIcon, GuideIcon } from '@/components/icons/mahjong';
 import { useAudio } from '@/hooks/use-audio';
 
@@ -30,6 +30,7 @@ export default function MahjongPuzzleGame() {
   const [gameMode, setGameMode] = useState<GameMode>('menu');
   const [showYakuGuide, setShowYakuGuide] = useState(false);
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
+  const [isResultMinimized, setIsResultMinimized] = useState(false);
   const multiplayerStatus = useMultiplayerStore((s) => s.status);
   const matchSnapshot = useMultiplayerStore((s) => s.matchSnapshot);
   const lastGameOver = useMultiplayerStore((s) => s.lastGameOver);
@@ -90,6 +91,7 @@ export default function MahjongPuzzleGame() {
   };
 
   const handleMultiplayerGameEnd = (payload: { winnerName: string; isPlayerWin: boolean; isSpectator?: boolean }) => {
+    setIsResultMinimized(false);
     setGameResult({
       winnerName: payload.winnerName,
       isPlayerWin: payload.isPlayerWin,
@@ -100,6 +102,7 @@ export default function MahjongPuzzleGame() {
   const handleResultClose = () => {
     playClick();
     setGameResult(null);
+    setIsResultMinimized(false);
     useMultiplayerStore.getState().setLastGameOver(null);
     if (multiplayerStatus === 'playing' || multiplayerStatus === 'spectating' || lastGameOver) {
       leaveRoom();
@@ -316,6 +319,7 @@ export default function MahjongPuzzleGame() {
 
         {gameMode === 'cpu' && (
           <CpuGame onGameEnd={(payload) => {
+            setIsResultMinimized(false);
             setGameResult({
               winnerName: payload.winnerName,
               isPlayerWin: payload.isPlayerWin,
@@ -334,8 +338,10 @@ export default function MahjongPuzzleGame() {
 
         <YakuGuide open={showYakuGuide} onOpenChange={setShowYakuGuide} />
 
-        <Dialog open={!!gameResult} onOpenChange={() => handleResultClose()}>
-          <DialogContent className="text-center">
+        <Dialog open={!!gameResult && !isResultMinimized} onOpenChange={(open) => {
+          if (!open) setIsResultMinimized(true);
+        }}>
+          <DialogContent className="text-center sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center justify-center gap-2 text-2xl">
                 {gameResult?.isSpectator ? (
@@ -374,6 +380,7 @@ export default function MahjongPuzzleGame() {
                   onClick={() => {
                     playClick();
                     setGameResult(null);
+                    setIsResultMinimized(false);
                     useMultiplayerStore.getState().setLastGameOver(null);
                     if (gameMode === 'multiplayer-game' || gameMode === 'multiplayer-lobby') {
                       setGameMode('multiplayer-lobby');
@@ -388,9 +395,27 @@ export default function MahjongPuzzleGame() {
                   もう一度
                 </Button>
               </div>
+              
+              <Button variant="ghost" size="sm" onClick={() => setIsResultMinimized(true)} className="text-muted-foreground w-full mt-2">
+                盤面を確認する（最小化）
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
+        
+        {/* Minimized Result Button */}
+        {!!gameResult && isResultMinimized && (
+          <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
+            <Button
+              size="lg"
+              onClick={() => setIsResultMinimized(false)}
+              className="rounded-full shadow-xl shadow-primary/20 bg-card hover:bg-card/90 text-foreground border border-border gap-2 px-6 h-14"
+            >
+              <Maximize2 className="w-5 h-5 text-primary" />
+              <span className="font-bold">結果ダイアログを開く</span>
+            </Button>
+          </div>
+        )}
 
         {(gameMode === 'single' || gameMode === 'cpu' || showMultiplayerMatch) && (
           <div className="fixed top-4 right-4 z-50">

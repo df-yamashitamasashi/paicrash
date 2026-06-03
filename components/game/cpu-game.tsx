@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Eye, Bot } from 'lucide-react';
 import { Tile } from './tile';
 import { cn } from '@/lib/utils';
+import type { MahjongTile } from '@/lib/mahjong-types';
 
 interface CpuGameProps {
   onGameEnd: (payload: { winnerName: string; isPlayerWin: boolean }) => void;
@@ -32,6 +33,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
     countdown
   } = useCpuGame();
   const [showGuide, setShowGuide] = useState(false);
+  const [hoveredTiles, setHoveredTiles] = useState<MahjongTile[] | null>(null);
 
   useEffect(() => {
     startMatch();
@@ -133,6 +135,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
               isGameOver={playerState.isGameOver}
               isPaused={isPaused}
               countdown={countdown}
+              highlightTiles={hoveredTiles}
             />
           </div>
 
@@ -171,6 +174,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
               uraDoraIndicator={playerState.uraDoraIndicator}
               lastYaku={playerState.lastYaku}
               clearHistory={playerState.clearHistory}
+              onHoverHistory={setHoveredTiles}
             />
             <GameControls
               onMove={(dir) => sendPlayerInput(dir === 'left' ? 'move-left' : 'move-right')}
@@ -282,6 +286,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
                 isPaused={isPaused}
                 isMobile
                 countdown={countdown}
+                highlightTiles={hoveredTiles}
               />
             </div>
           </div>

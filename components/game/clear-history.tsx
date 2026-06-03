@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import type { ClearResult } from '@/lib/mahjong-types';
+import type { ClearResult, MahjongTile } from '@/lib/mahjong-types';
 import { getTileDisplay, getTileKey } from '@/lib/mahjong-types';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronUp, History } from 'lucide-react';
 
 interface ClearHistoryProps {
   history: ClearResult[];
+  onHoverItem?: (tiles: MahjongTile[] | null) => void;
 }
 
 // Suit color for tile display
@@ -28,7 +29,7 @@ function formatTime(ts: number): string {
   return `${h}:${m}:${s}`;
 }
 
-export function ClearHistory({ history }: ClearHistoryProps) {
+export function ClearHistory({ history, onHoverItem }: ClearHistoryProps) {
   const [open, setOpen] = useState(false);
 
   // Show newest first
@@ -65,7 +66,11 @@ export function ClearHistory({ history }: ClearHistoryProps) {
             <p className="text-xs text-muted-foreground text-center py-4">まだ消した牌はありません</p>
           ) : (
             reversed.map((result, i) => (
-              <HistoryRow key={`${result.timestamp}-${i}`} result={result} />
+              <HistoryRow 
+                key={`${result.timestamp}-${i}`} 
+                result={result} 
+                onHoverItem={onHoverItem}
+              />
             ))
           )}
         </div>
@@ -74,14 +79,18 @@ export function ClearHistory({ history }: ClearHistoryProps) {
   );
 }
 
-function HistoryRow({ result }: { result: ClearResult }) {
+function HistoryRow({ result, onHoverItem }: { result: ClearResult, onHoverItem?: (tiles: MahjongTile[] | null) => void }) {
   const isChain = result.chainCount > 0;
 
   return (
-    <div className={cn(
-      'px-3 py-2 text-xs',
-      isChain && 'bg-primary/5',
-    )}>
+    <div 
+      className={cn(
+        'px-3 py-2 text-xs transition-colors hover:bg-muted/50 cursor-default',
+        isChain && 'bg-primary/5',
+      )}
+      onMouseEnter={() => onHoverItem?.(result.tiles)}
+      onMouseLeave={() => onHoverItem?.(null)}
+    >
       {/* Top row: time + yaku + score */}
       <div className="flex items-center justify-between gap-2 mb-1">
         <div className="flex items-center gap-1.5 min-w-0">

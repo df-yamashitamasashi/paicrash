@@ -3,6 +3,7 @@
 import { useEffect, useCallback, useState, useRef } from 'react';
 import { useGameStore } from '@/lib/game-store';
 import { getTileDisplay } from '@/lib/mahjong-types';
+import type { MahjongTile } from '@/lib/mahjong-types';
 import { GameBoardComponent } from './game-board';
 import { GameStats } from './game-stats';
 import { GameControls } from './game-controls';
@@ -17,6 +18,7 @@ interface SinglePlayerGameProps {
 export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) {
   const { gameState, startGame, moveTile, dropTile, hardDrop, tick, togglePause, reset } = useGameStore();
   const [showGuide, setShowGuide] = useState(false);
+  const [hoveredTiles, setHoveredTiles] = useState<MahjongTile[] | null>(null);
   const tickRef = useRef<NodeJS.Timeout | null>(null);
   const lastTickRef = useRef<number>(Date.now());
   
@@ -128,6 +130,7 @@ export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) 
             currentTile={gameState.currentTile}
             isGameOver={gameState.isGameOver}
             isPaused={gameState.isPaused}
+            highlightTiles={hoveredTiles}
           />
           
           {/* Side panel */}
@@ -142,6 +145,7 @@ export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) 
               uraDoraIndicator={gameState.uraDoraIndicator}
               lastYaku={gameState.lastYaku}
               clearHistory={gameState.clearHistory}
+              onHoverHistory={setHoveredTiles}
             />
             
             <GameControls
@@ -221,6 +225,7 @@ export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) 
             currentTile={gameState.currentTile}
             isGameOver={gameState.isGameOver}
             isPaused={gameState.isPaused}
+            highlightTiles={hoveredTiles}
             isMobile
           />
         </div>
