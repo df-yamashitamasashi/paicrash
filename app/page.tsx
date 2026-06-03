@@ -175,8 +175,8 @@ export default function MahjongPuzzleGame() {
                 <div className="hidden sm:block h-[1px] w-12 bg-gradient-to-r from-transparent to-primary/60" />
                 
                 <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight drop-shadow-sm select-none">
-                  {/* 高級感のあるグラデーションタイトル */}
-                  <span className="bg-gradient-to-r from-primary via-[#b35e38] to-primary bg-clip-text text-transparent">
+                  {/* 高級感のある金〜朱色グラデーションタイトル */}
+                  <span className="bg-gradient-to-r from-[#c9a84c] via-[#e74c3c] to-[#c9a84c] bg-clip-text text-transparent">
                     PaiCrash
                   </span>
                 </h1>
@@ -378,7 +378,10 @@ export default function MahjongPuzzleGame() {
                     if (gameMode === 'multiplayer-game' || gameMode === 'multiplayer-lobby') {
                       setGameMode('multiplayer-lobby');
                     } else {
-                      setGameMode(gameMode);
+                      // Force remount by briefly unmounting the game component
+                      const currentMode = gameMode;
+                      setGameMode('menu');
+                      requestAnimationFrame(() => setGameMode(currentMode));
                     }
                   }}
                 >
