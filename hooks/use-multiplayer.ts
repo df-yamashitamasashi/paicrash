@@ -22,6 +22,7 @@ export function useMultiplayer() {
 
   const setupRoomListeners = useCallback((roomId: string) => {
     cleanupListeners();
+    const joinedAt = Date.now();
     
     const roomRef = ref(db, `rooms/${roomId}`);
     const unsubRoom = onValue(roomRef, (snapshot) => {
@@ -131,8 +132,9 @@ export function useMultiplayer() {
       }
       
       const current = useMultiplayerStore.getState();
+      const isMatchOver = playersList.some(p => p.gameState?.isGameOver);
       
-      if (!prevMatch && matchSnapshotObj) {
+      if (!prevMatch && matchSnapshotObj && !isMatchOver) {
         // Match started
         store.setLastGameOver(null);
         audio.enable();
@@ -155,6 +157,8 @@ export function useMultiplayer() {
     const unsubGameOver = onValue(gameOverRef, (snapshot) => {
       if (!snapshot.exists()) return;
       const data = snapshot.val() as GameOverPayload;
+      
+      if (data.endedAt < joinedAt) return;
       
       const prevGameOver = store.lastGameOver;
       if (!prevGameOver || prevGameOver.endedAt !== data.endedAt) {
