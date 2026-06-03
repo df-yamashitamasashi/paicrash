@@ -563,8 +563,10 @@ function findSequenceGroups(board: GameBoard, suit: TileSuit): MahjongTile[][] {
     return Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1 && (a.x !== b.x || a.y !== b.y);
   }
 
-  // Helper: is a set of tiles connected via consecutive-number adjacency?
-  // Each tile must be reachable from the first via steps where |numA - numB| === 1 and adjacent.
+  // Helper: is a set of tiles connected via spatial 8-directional adjacency?
+  // Each tile must be reachable from the first via steps where tiles are
+  // 8-directionally adjacent (no number constraint — the number check is
+  // handled separately by ensuring the group forms a contiguous range).
   function isConnectedSequence(tiles: MahjongTile[]): boolean {
     if (tiles.length <= 1) return true;
     const visited = new Set<string>();
@@ -576,7 +578,7 @@ function findSequenceGroups(board: GameBoard, suit: TileSuit): MahjongTile[][] {
       for (const other of tiles) {
         const key = `${other.x},${other.y}`;
         if (visited.has(key)) continue;
-        if (isAdjacent(cur, other) && Math.abs(cur.number! - other.number!) === 1) {
+        if (isAdjacent(cur, other)) {
           visited.add(key);
           queue.push(other);
         }
@@ -585,7 +587,9 @@ function findSequenceGroups(board: GameBoard, suit: TileSuit): MahjongTile[][] {
     return visited.size === tiles.length;
   }
 
-  // Step 1: find connected components in the "consecutive-adjacency" graph
+  // Step 1: find connected components of same-suit tiles via spatial adjacency
+  // Any two same-suit numbered tiles that are 8-directionally adjacent belong
+  // to the same component, regardless of their number difference.
   const visited = new Set<string>();
   const components: MahjongTile[][] = [];
 
@@ -593,7 +597,7 @@ function findSequenceGroups(board: GameBoard, suit: TileSuit): MahjongTile[][] {
     const key = `${startTile.x},${startTile.y}`;
     if (visited.has(key)) continue;
 
-    // BFS: collect all tiles reachable via consecutive-number adjacency
+    // BFS: collect all same-suit tiles reachable via 8-directional adjacency
     const component: MahjongTile[] = [];
     const queue: MahjongTile[] = [startTile];
     const localVisited = new Set<string>();
@@ -612,10 +616,8 @@ function findSequenceGroups(board: GameBoard, suit: TileSuit): MahjongTile[][] {
         if (!neighbor || neighbor.suit !== suit || !neighbor.number) continue;
         const nkey = `${nx},${ny}`;
         if (localVisited.has(nkey)) continue;
-        if (Math.abs(cur.number! - neighbor.number!) === 1) {
-          localVisited.add(nkey);
-          queue.push(neighbor);
-        }
+        localVisited.add(nkey);
+        queue.push(neighbor);
       }
     }
 

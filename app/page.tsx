@@ -366,10 +366,11 @@ export default function MahjongPuzzleGame() {
                 </Button>
               )}
               <div className="flex gap-3 justify-center w-full">
-                <Button onClick={handleResultClose} className="w-full bg-yellow-200 hover:bg-yellow-300 text-yellow-950 font-bold border-none">
+                <Button onClick={handleResultClose} className="flex-1 min-w-0 bg-yellow-200 hover:bg-yellow-300 text-yellow-950 font-bold border-none">
                   メニューに戻る
                 </Button>
                 <Button
+                  className="flex-1 min-w-0"
                   onClick={() => {
                     playClick();
                     setGameResult(null);
