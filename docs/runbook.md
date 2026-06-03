@@ -95,6 +95,13 @@ gcloud services enable \
     artifactregistry.googleapis.com \
     run.googleapis.com
 
+# Artifact Registry に Docker リポジトリを作成します
+gcloud artifacts repositories create "paicrash-repo" \
+    --repository-format="docker" \
+    --location="asia-northeast1" \
+    --description="Docker repository for paicrash" \
+    --project="${PROJECT_ID}"
+
 # Workload Identity プールを作成します
 gcloud iam workload-identity-pools create "github" \\
     --project="\${PROJECT_ID}" \\
