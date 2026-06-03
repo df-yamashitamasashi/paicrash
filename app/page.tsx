@@ -178,8 +178,7 @@ export default function MahjongPuzzleGame() {
                 <div className="hidden sm:block h-[1px] w-12 bg-gradient-to-r from-transparent to-primary/60" />
                 
                 <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight drop-shadow-sm select-none">
-                  {/* 高級感のある金〜朱色グラデーションタイトル */}
-                  <span className="bg-gradient-to-r from-[#c9a84c] via-[#e74c3c] to-[#c9a84c] bg-clip-text text-transparent">
+                  <span className="text-primary">
                     PaiCrash
                   </span>
                 </h1>
