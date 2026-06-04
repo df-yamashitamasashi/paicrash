@@ -185,8 +185,8 @@ export const GameBoardComponent = React.memo(function GameBoardComponent({
       )}
 
       {/* Game over overlay */}
-      {isGameOver && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+      {isGameOver && (!highlightTiles || highlightTiles.length === 0) && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30 transition-opacity duration-200">
           <div className="bg-background/90 backdrop-blur-md px-8 py-6 rounded-2xl shadow-2xl border-2 border-destructive/50 text-center animate-yaku-announce pointer-events-auto">
             <h3 className={cn("font-extrabold text-destructive mb-1", isMobile ? "text-2xl" : "text-3xl")}>GAME OVER</h3>
             <p className="text-muted-foreground text-sm font-medium">ゲーム終了</p>
