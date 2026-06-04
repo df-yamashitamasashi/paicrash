@@ -39,6 +39,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
     playerName,
     matchSnapshot,
     lastGameOver,
+    countdown,
     isServerConnected,
     currentRoom,
     sendGameInput,
@@ -71,16 +72,18 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
   const lastDropTime = useRef<number>(0);
   const gameEndedCalledRef = useRef(false);
 
+  const myState = mySnapshot?.gameState;
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (isSpectator || mySnapshot?.gameState?.isGameOver || isPlayerAnimating) return;
+    if (myState?.isGameOver || isSpectator || countdown !== null || isPlayerAnimating) return;
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
     touchLastX.current = e.touches[0].clientX;
     touchStartTime.current = Date.now();
-  }, [isSpectator, mySnapshot, isPlayerAnimating]);
+  }, [myState?.isGameOver, isSpectator, countdown, isPlayerAnimating]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (isSpectator || mySnapshot?.gameState?.isGameOver || isPlayerAnimating) return;
+    if (myState?.isGameOver || isSpectator || countdown !== null || isPlayerAnimating) return;
     if (touchStartX.current === null || touchLastX.current === null || touchStartY.current === null) return;
     
     const currentX = e.touches[0].clientX;
@@ -102,10 +105,10 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
       touchStartY.current = currentY;
       lastDropTime.current = now;
     }
-  }, [isSpectator, mySnapshot, isPlayerAnimating, sendGameInput]);
+  }, [myState?.isGameOver, isSpectator, countdown, isPlayerAnimating, sendGameInput]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (isSpectator || mySnapshot?.gameState?.isGameOver || isPlayerAnimating) return;
+    if (myState?.isGameOver || isSpectator || countdown !== null || isPlayerAnimating) return;
     if (touchStartY.current !== null && touchStartX.current !== null) {
       const currentY = e.changedTouches[0].clientY;
       const deltaY = currentY - touchStartY.current;
@@ -118,11 +121,11 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
     touchStartX.current = null;
     touchStartY.current = null;
     touchLastX.current = null;
-  }, [isSpectator, mySnapshot, isPlayerAnimating, sendGameInput]);
+  }, [myState?.isGameOver, isSpectator, countdown, isPlayerAnimating, sendGameInput]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (isSpectator || !mySnapshot?.gameState || mySnapshot.gameState.isGameOver || isPlayerAnimating) return;
+      if (isSpectator || !myState || myState.isGameOver || isPlayerAnimating || countdown !== null) return;
 
       switch (e.key) {
         case 'ArrowLeft':
@@ -143,7 +146,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
           break;
       }
     },
-    [isSpectator, mySnapshot, isPlayerAnimating, sendGameInput],
+    [isSpectator, myState, isPlayerAnimating, countdown, sendGameInput],
   );
 
   useEffect(() => {
@@ -301,7 +304,6 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
     );
   }
 
-  const myState = mySnapshot?.gameState;
   const opponentState = opponentSnapshot?.gameState;
 
   if (!myState) {
@@ -350,6 +352,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
             isGameOver={myState.isGameOver}
             isPaused={false}
             highlightTiles={hoveredTiles}
+            countdown={countdown}
           />
         </div>
 
@@ -493,6 +496,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
               currentTile={playerAnimBoard ? null : myState.currentTile}
               isGameOver={myState.isGameOver}
               highlightTiles={hoveredTiles}
+              countdown={countdown}
               isMobile
             />
           </div>
@@ -549,59 +553,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
       {/* Nico Nico Comments */}
       <NicoCommentsOverlay />
 
-      {/* Hidden PDF Report Template */}
-      {lastGameOver && (
-        <div className="fixed top-[-9999px] left-[-9999px] z-[-1]">
-          <div id="pdf-report-container" className="w-[800px] h-[600px] bg-white text-black p-12 flex flex-col items-center justify-center border-8 border-double border-slate-300 shadow-2xl relative">
-            <div className="absolute top-4 left-4 right-4 bottom-4 border border-slate-200 pointer-events-none" />
-            <h1 className="text-4xl font-serif font-bold text-slate-800 mb-2 tracking-widest">戦績証明書</h1>
-            <p className="text-lg text-slate-500 mb-8 font-serif">Room: {lastGameOver.roomName}</p>
-            
-            <div className="w-full max-w-2xl bg-slate-50 rounded-xl p-8 mb-8 border border-slate-200">
-              <div className="text-center mb-6">
-                <span className="inline-block bg-red-100 text-red-800 text-sm font-bold px-3 py-1 rounded-full mb-2">WINNER</span>
-                <h2 className="text-3xl font-bold text-red-600">
-                  {lastGameOver.winnerName}
-                </h2>
-              </div>
-              
-              <table className="w-full text-lg">
-                <thead>
-                  <tr className="border-b-2 border-slate-300">
-                    <th className="py-3 text-left font-semibold text-slate-600">プレイヤー</th>
-                    <th className="py-3 text-right font-semibold text-slate-600">最終スコア</th>
-                    <th className="py-3 text-center font-semibold text-slate-600">結果</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lastGameOver.scores.map(s => (
-                    <tr key={s.playerId} className="border-b border-slate-200">
-                      <td className="py-4 font-medium text-slate-800">{s.playerName}</td>
-                      <td className="py-4 text-right font-mono font-bold text-slate-700">{s.score.toLocaleString()}</td>
-                      <td className="py-4 text-center">
-                        {s.playerId === lastGameOver.winnerId ? (
-                          <span className="text-red-600 font-bold bg-red-50 px-2 py-1 rounded border border-red-200">WIN</span>
-                        ) : (
-                          <span className="text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">LOSE</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            <p className="text-slate-600 font-serif">
-              対戦日時: {new Date(lastGameOver.endedAt).toLocaleString('ja-JP')}
-            </p>
-            <div className="mt-6 flex items-center justify-center gap-2 text-slate-400">
-              <span className="w-8 h-[1px] bg-slate-300" />
-              <span className="text-sm font-serif">PaiCrash Online Multiplayer</span>
-              <span className="w-8 h-[1px] bg-slate-300" />
-            </div>
-          </div>
-        </div>
-      )}
+
     </>
   );
 }

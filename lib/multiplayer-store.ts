@@ -43,6 +43,7 @@ interface MultiplayerState {
   messages: ChatMessagePayload[];
   matchSnapshot: MatchSnapshot | null;
   lastGameOver: GameOverPayload | null;
+  countdown: number | null;
 
   setPlayerName: (name: string) => void;
   setStatus: (status: ConnectionStatus) => void;
@@ -57,6 +58,7 @@ interface MultiplayerState {
   clearMessages: () => void;
   setMatchSnapshot: (snapshot: MatchSnapshot | null) => void;
   setLastGameOver: (payload: GameOverPayload | null) => void;
+  setCountdown: (countdown: number | null) => void;
   reset: () => void;
 }
 
@@ -73,6 +75,7 @@ const initialState = {
   messages: [] as ChatMessagePayload[],
   matchSnapshot: null as MatchSnapshot | null,
   lastGameOver: null as GameOverPayload | null,
+  countdown: null as number | null,
 };
 
 export const useMultiplayerStore = create<MultiplayerState>((set) => ({
@@ -94,6 +97,7 @@ export const useMultiplayerStore = create<MultiplayerState>((set) => ({
   clearMessages: () => set({ messages: [] }),
   setMatchSnapshot: (snapshot) => set({ matchSnapshot: snapshot }),
   setLastGameOver: (payload) => set({ lastGameOver: payload }),
+  setCountdown: (countdown) => set({ countdown }),
   reset: () => set(initialState),
 }));
 

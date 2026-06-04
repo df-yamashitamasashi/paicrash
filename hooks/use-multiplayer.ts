@@ -12,6 +12,7 @@ import { getTickIntervalMs } from '@/lib/game-engine';
 const sharedLocalGameStateRef = { current: null as any };
 const sharedGameLoopRef = { current: null as NodeJS.Timeout | null };
 const sharedListenersRef = { current: [] as Array<() => void> };
+const sharedCountdownRef = { current: null as NodeJS.Timeout | null };
 
 export function useMultiplayer() {
   const store = useMultiplayerStore();
@@ -23,6 +24,10 @@ export function useMultiplayer() {
   const cleanupListeners = useCallback(() => {
     listenersRef.current.forEach(unsub => unsub());
     listenersRef.current = [];
+    if (sharedCountdownRef.current) {
+      clearInterval(sharedCountdownRef.current);
+      sharedCountdownRef.current = null;
+    }
   }, []);
 
   const setupRoomListeners = useCallback((roomId: string) => {
@@ -146,7 +151,25 @@ export function useMultiplayer() {
         // Match started
         store.setLastGameOver(null);
         audio.enable();
-        audio.startBgm();
+        
+        // Start countdown
+        if (sharedCountdownRef.current) clearInterval(sharedCountdownRef.current);
+        store.setCountdown(3);
+        audio.playCountdownBeep();
+        
+        let count = 3;
+        sharedCountdownRef.current = setInterval(() => {
+          count -= 1;
+          if (count <= 0) {
+            if (sharedCountdownRef.current) clearInterval(sharedCountdownRef.current);
+            store.setCountdown(null);
+            audio.playStartFanfare();
+            audio.startBgm();
+          } else {
+            store.setCountdown(count);
+            audio.playCountdownBeep();
+          }
+        }, 1000);
       }
       
       if ((isJustStarted || isReconnectingPlaying) && current.role === 'player') {
@@ -190,6 +213,10 @@ export function useMultiplayer() {
     
     const runTick = () => {
       if (!localGameStateRef.current || localGameStateRef.current.isGameOver) return;
+      if (useMultiplayerStore.getState().countdown !== null) {
+        gameLoopRef.current = setTimeout(runTick, 100);
+        return;
+      }
       
       let state = localGameStateRef.current;
       
@@ -524,7 +551,7 @@ export function useMultiplayer() {
     }
 
     const matchData = {
-      startedAt: Date.now(),
+      startedAt: Date.now() + 3500, // delay to sync countdown start across clients
       winnerId: null,
       players
     };
@@ -553,8 +580,8 @@ export function useMultiplayer() {
   }, [store]);
 
   const sendGameInput = useCallback(async (action: GameInputAction) => {
-    const { playerId, currentRoom, role, status, matchSnapshot } = useMultiplayerStore.getState();
-    if (role !== 'player' || status !== 'playing' || !currentRoom || !playerId || !localGameStateRef.current) return;
+    const { playerId, currentRoom, role, status, matchSnapshot, countdown } = useMultiplayerStore.getState();
+    if (role !== 'player' || status !== 'playing' || !currentRoom || !playerId || !localGameStateRef.current || countdown !== null) return;
 
     const { state: newState, garbageSent, changed } = applyGameInput(localGameStateRef.current, action);
     
@@ -591,6 +618,7 @@ export function useMultiplayer() {
     messages: store.messages,
     matchSnapshot: store.matchSnapshot,
     lastGameOver: store.lastGameOver,
+    countdown: store.countdown,
     error: store.error,
     isServerConnected: store.isServerConnected,
 
