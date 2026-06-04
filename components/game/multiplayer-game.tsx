@@ -24,6 +24,7 @@ interface MultiplayerGameProps {
     winnerName: string; 
     isPlayerWin: boolean; 
     isSpectator: boolean;
+    playerName: string;
     playerScore: number;
     opponentScore: number;
     opponentName: string;
@@ -488,7 +489,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
         </div>
 
         {/* Game boards area */}
-        <div className={`flex-1 flex flex-row items-stretch justify-center p-2 min-h-0 gap-2 w-full max-w-full transition-all duration-300 ${showHistory ? 'pb-[30dvh]' : ''}`}>
+        <div className={`flex-1 flex flex-row items-stretch justify-center p-2 min-h-0 gap-2 w-full max-w-full transition-all duration-300`}>
           <div 
             className="flex-1 flex items-center justify-center min-w-0 min-h-0 overflow-hidden touch-none"
             onTouchStart={handleTouchStart}

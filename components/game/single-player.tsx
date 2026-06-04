@@ -286,7 +286,7 @@ export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) 
         
         {/* Game board - fills remaining space */}
         <div 
-          className={`flex-1 flex items-center justify-center p-2 min-h-0 min-w-0 overflow-hidden touch-none transition-all duration-300 ${showHistory ? 'pb-[30dvh]' : ''}`}
+          className={`flex-1 flex items-center justify-center p-2 min-h-0 min-w-0 overflow-hidden touch-none transition-all duration-300`}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
