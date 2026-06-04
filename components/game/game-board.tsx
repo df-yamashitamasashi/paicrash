@@ -62,26 +62,32 @@ export const GameBoardComponent = React.memo(function GameBoardComponent({
   const baseHeight = board.height * cellSize + 16;
   const finalScale = scale;
 
+  const shouldScaleToContainer = isMobile && !isOpponent;
+
   return (
     <div
+      className={cn("relative", shouldScaleToContainer && "w-full h-full flex items-center justify-center min-h-0 min-w-0")}
       style={{
-        width: baseWidth * finalScale,
-        height: baseHeight * finalScale,
-        position: 'relative',
+        width: !shouldScaleToContainer ? baseWidth * finalScale : undefined,
+        height: !shouldScaleToContainer ? baseHeight * finalScale : undefined,
+        containerType: shouldScaleToContainer ? 'size' : undefined,
       }}
     >
       <div
         ref={boardRef}
         className={cn(
-          'absolute top-0 left-0 bg-card/90 rounded-3xl border-4 border-primary/60 overflow-hidden',
+          'absolute bg-card/90 rounded-3xl border-4 border-primary/60 overflow-hidden',
           'shadow-[0_0_40px_rgba(var(--primary),0.3)] backdrop-blur-md',
-          isYakumanAnimating && 'animate-yakuman-freeze' // Screen shake / freeze shake effect
+          isYakumanAnimating && 'animate-yakuman-freeze', // Screen shake / freeze shake effect
+          !shouldScaleToContainer && 'top-0 left-0'
         )}
         style={{
           width: baseWidth,
           height: baseHeight,
-          transform: `scale(${finalScale})`,
-          transformOrigin: 'top left',
+          transform: shouldScaleToContainer
+            ? `scale(min(calc(100cqw / ${baseWidth}), calc(100cqh / ${baseHeight})))`
+            : `scale(${finalScale})`,
+          transformOrigin: shouldScaleToContainer ? 'center' : 'top left',
         }}
       >
       {/* Background grid */}
