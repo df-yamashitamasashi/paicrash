@@ -6,7 +6,8 @@ import { ref, onValue, set, update, push, onDisconnect, get, serverTimestamp, ru
 import type { GameInputAction, MatchSnapshot, PublicRoom, RoomMemberRole, ChatMessagePayload, GameOverPayload, PlayerMatchSnapshot } from '@/lib/multiplayer-protocol';
 import { SESSION_STORAGE_KEY, useMultiplayerStore } from '@/lib/multiplayer-store';
 import { audio } from '@/lib/audio-manager';
-import { applyGameInput, createInitialMultiplayerGameState, flushGarbageQueue, getTickIntervalMs } from '@/lib/multiplayer-game-logic';
+import { applyGameInput, createInitialMultiplayerGameState, flushGarbageQueue } from '@/lib/multiplayer-game-logic';
+import { getTickIntervalMs } from '@/lib/game-engine';
 
 const sharedLocalGameStateRef = { current: null as any };
 const sharedGameLoopRef = { current: null as NodeJS.Timeout | null };

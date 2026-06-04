@@ -3,8 +3,8 @@ import {
   createInitialMultiplayerGameState, 
   applyGameInput, 
   flushGarbageQueue, 
-  getTickIntervalMs 
 } from '@/lib/multiplayer-game-logic';
+import { getTickIntervalMs } from '@/lib/game-engine';
 import type { GameState } from '@/lib/mahjong-types';
 import type { GameInputAction } from '@/lib/multiplayer-protocol';
 import { audio } from '@/lib/audio-manager';
@@ -237,11 +237,11 @@ export function useCpuGame() {
   useEffect(() => {
     if (!gameState.cpu || isGameOver || countdown !== null || isPaused) return;
     
-    let aiSpeed = 150;
-    if (cpuSpeed === 'slow') aiSpeed = 300;
-    else if (cpuSpeed === 'normal') aiSpeed = 150;
-    else if (cpuSpeed === 'fast') aiSpeed = 80;
-    else if (cpuSpeed === 'insane') aiSpeed = 40;
+    let aiSpeed = 400;
+    if (cpuSpeed === 'slow') aiSpeed = 800;
+    else if (cpuSpeed === 'normal') aiSpeed = 400;
+    else if (cpuSpeed === 'fast') aiSpeed = 200;
+    else if (cpuSpeed === 'insane') aiSpeed = 100;
     
     const interval = setInterval(() => {
       if (isPlayerAnimatingRef.current) return; // Block CPU tick loop during player's Yakuman animation

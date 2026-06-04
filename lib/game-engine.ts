@@ -1086,3 +1086,22 @@ export function calculateGarbage(results: ClearResult[]): number {
   }
   return garbage;
 }
+
+/**
+ * Calculate player level based on score.
+ * Uses a square root curve so that early scores level up quickly,
+ * but huge yakuman scores don't instantly max out the level.
+ * e.g. 1000pt -> Lv 2, 4000pt -> Lv 3, 9000pt -> Lv 4, 32000pt(Yakuman) -> Lv 6
+ */
+export function calculateLevel(score: number): number {
+  return Math.floor(Math.sqrt(score / 1000)) + 1;
+}
+
+/**
+ * Calculate the tile drop interval (tick speed) based on the level.
+ */
+export function getTickIntervalMs(level: number): number {
+  const baseSpeed = 800;
+  // Reduce 60ms per level, cap at 150ms
+  return Math.max(150, baseSpeed - (level - 1) * 60);
+}

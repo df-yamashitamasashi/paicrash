@@ -13,6 +13,7 @@ import {
   addGarbageTiles,
   calculateScore,
   calculateGarbage,
+  calculateLevel,
 } from './game-engine';
 import { audio } from './audio-manager';
 
@@ -276,7 +277,7 @@ export const useGameStore = create<GameStore>((set, get) => {
           // Keep current tile hidden during animation (move off-screen)
           currentTile: null,
           score: gameState.score + totalScore,
-          level: Math.floor((gameState.score + totalScore) / 1000) + 1,
+          level: calculateLevel(gameState.score + totalScore),
           lastYaku,
           clearHistory: [
             ...gameState.clearHistory,
@@ -383,7 +384,7 @@ export const useGameStore = create<GameStore>((set, get) => {
             currentTile: newCurrentTile,
             nextTile: newNextTile,
             score: state.score + chainScore,
-            level: Math.floor((state.score + chainScore) / 1000) + 1,
+            level: calculateLevel(state.score + chainScore),
             combo: chainCount > 1 ? chainCount - 1 : 0,
             maxCombo: Math.max(state.maxCombo, chainCount - 1),
             isGameOver: gameOver,

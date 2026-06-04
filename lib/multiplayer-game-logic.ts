@@ -12,6 +12,7 @@ import {
   generateRandomTile,
   isGameOver,
   placeTile,
+  calculateLevel,
 } from './game-engine';
 import type { GameInputAction } from './multiplayer-protocol';
 
@@ -163,7 +164,7 @@ function placeCurrentTile(state: GameState): ApplyInputResult {
       currentTile: newCurrentTile,
       nextTile: newNextTile,
       score: state.score + totalScore,
-      level: Math.floor((state.score + totalScore) / 1000) + 1,
+      level: calculateLevel(state.score + totalScore),
       combo: chainCount > 0 ? chainCount : 0,
       maxCombo: Math.max(state.maxCombo, chainCount),
       garbageQueue: newGarbageQueue,
@@ -275,7 +276,4 @@ export function flushGarbageQueue(state: GameState): { state: GameState; applied
   };
 }
 
-export function getTickIntervalMs(level: number): number {
-  const baseSpeed = 800;
-  return Math.max(100, baseSpeed - (level - 1) * 80);
-}
+// Removed getTickIntervalMs as it is now in game-engine.ts

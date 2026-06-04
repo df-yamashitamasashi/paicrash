@@ -10,6 +10,7 @@ import { GameControls, GameActionButtons } from './game-controls';
 import { YakuGuide } from './yaku-guide';
 import { HistoryDialog } from './history-dialog';
 import { Button } from '@/components/ui/button';
+import { getTickIntervalMs } from '@/lib/game-engine';
 import { Users } from 'lucide-react';
 
 interface SinglePlayerGameProps {
@@ -31,8 +32,7 @@ export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) 
   
   // Game loop
   useEffect(() => {
-    const baseSpeed = 1000;
-    const speed = Math.max(100, baseSpeed - (gameState.level - 1) * 100);
+    const speed = getTickIntervalMs(gameState.level);
     
     const runTick = () => {
       const now = Date.now();
