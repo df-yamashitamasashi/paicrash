@@ -171,6 +171,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
     const timer = setTimeout(() => {
       const { matchSnapshot: currentMatch, mySnapshot: currentMy, opponentSnapshot: currentOpp, isSpectator: currentSpec, playerId: currentPid } = latestDataRef.current;
 
+      let pName = 'あなた';
       let pScore = 0;
       let oScore = 0;
       let oName = 'Opponent';
@@ -178,6 +179,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
       let oHistory: import('@/lib/mahjong-types').ClearResult[] = [];
 
       if (currentSpec && currentMatch?.players.length === 2) {
+        pName = currentMatch.players[0].playerName;
         pScore = currentMatch.players[0].gameState.score;
         pHistory = currentMatch.players[0].gameState.clearHistory ?? [];
         oScore = currentMatch.players[1].gameState.score;
@@ -194,7 +196,9 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
       // Also ensure we use the final score from lastGameOver if available
       if (lastGameOver) {
         if (currentSpec && lastGameOver.scores.length >= 2) {
+          pName = lastGameOver.scores[0].playerName;
           pScore = lastGameOver.scores[0].score;
+          oName = lastGameOver.scores[1].playerName;
           oScore = lastGameOver.scores[1].score;
         } else {
           const myFinalScore = lastGameOver.scores.find(s => s.playerId === currentPid);
@@ -212,6 +216,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
         winnerName: lastGameOver.winnerName,
         isPlayerWin: lastGameOver.winnerId === currentPid,
         isSpectator: currentSpec,
+        playerName: pName,
         playerScore: pScore,
         opponentScore: oScore,
         opponentName: oName,

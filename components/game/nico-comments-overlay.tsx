@@ -50,7 +50,7 @@ export function NicoCommentsOverlay() {
   if (activeComments.length === 0) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
+    <div className="pointer-events-none fixed inset-0 z-[9999] overflow-hidden">
       {activeComments.map((comment) => (
         <div
           key={comment.id}

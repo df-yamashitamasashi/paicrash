@@ -17,6 +17,7 @@ export interface GameResultData {
   winnerName: string;
   isPlayerWin: boolean;
   isSpectator: boolean;
+  playerName: string;
   playerScore: number;
   opponentScore: number;
   opponentName: string;
@@ -264,7 +265,7 @@ export function GameResultDialog({
           )}>
             <div className="flex items-end justify-between mb-2">
               <div className="text-center flex-1">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">あなた</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{result.isSpectator ? result.playerName : 'あなた'}</p>
                 <p className="text-3xl font-black tabular-nums text-primary">
                   <AnimatedScore target={result.playerScore} delay={500} />
                 </p>
