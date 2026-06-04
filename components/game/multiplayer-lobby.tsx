@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useMultiplayer } from '@/hooks/use-multiplayer';
 import { useMultiplayerStore } from '@/lib/multiplayer-store';
@@ -166,29 +167,56 @@ export function MultiplayerLobby({ onBack }: MultiplayerLobbyProps) {
             <CardTitle className="text-lg">プレイヤー</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {currentRoom.players.map((player) => (
+            {currentRoom.players.map((player) => {
+              const isMe = player.id === playerId;
+              return (
               <div
                 key={player.id}
                 className={cn(
-                  'flex items-center justify-between p-3 rounded-lg border',
-                  player.id === playerId ? 'bg-primary/10 border-primary/30' : 'bg-card',
+                  'flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg border transition-colors',
+                  isMe ? 'bg-primary/10 border-primary/30 shadow-sm' : 'bg-card',
                 )}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {player.isHost && <HostCrownIcon className="h-4 w-4 text-primary" />}
                   <span className="font-medium">{player.name}</span>
-                  {player.id === playerId && (
+                  {isMe && (
                     <Badge variant="secondary" className="text-xs">あなた</Badge>
                   )}
                   {!player.isConnected && (
                     <Badge variant="destructive" className="text-xs">切断</Badge>
                   )}
                 </div>
-                <Badge variant={player.isReady ? 'default' : 'secondary'}>
-                  {player.isReady ? '準備完了' : '待機中'}
-                </Badge>
+                <div className="flex items-center gap-3 self-end sm:self-auto">
+                  {isMe && !isSpectator && !currentRoom.isStarted ? (
+                    <div className="flex items-center gap-4 bg-background/50 px-3 py-1.5 rounded-md border border-border/50">
+                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <Checkbox 
+                          checked={player.isReady} 
+                          onCheckedChange={() => void toggleReady()}
+                        />
+                        <span className={cn("text-sm font-bold", player.isReady ? "text-primary" : "text-muted-foreground")}>準備完了</span>
+                      </label>
+                      {isHost && (
+                        <Button 
+                          onClick={() => void startGame()} 
+                          disabled={!canStart} 
+                          size="sm"
+                          className="h-7 px-3 text-xs"
+                        >
+                          <PlayIcon className="h-3 w-3 mr-1" />
+                          ゲーム開始
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <Badge variant={player.isReady ? 'default' : 'secondary'}>
+                      {player.isReady ? '準備完了' : '待機中'}
+                    </Badge>
+                  )}
+                </div>
               </div>
-            ))}
+            )})}
 
             {currentRoom.players.length < currentRoom.maxPlayers && !currentRoom.isStarted && (
               <div className="flex items-center justify-center p-3 rounded-lg border border-dashed border-muted-foreground/30 text-muted-foreground">
@@ -253,33 +281,7 @@ export function MultiplayerLobby({ onBack }: MultiplayerLobbyProps) {
           </CardContent>
         </Card>
 
-        {!isSpectator && !currentRoom.isStarted && (
-          <div className="flex gap-3">
-            <Button
-              variant={myPlayer?.isReady ? 'secondary' : 'default'}
-              onClick={() => void toggleReady()}
-              className="flex-1"
-            >
-              {myPlayer?.isReady ? (
-                <>
-                  <CancelIcon className="h-4 w-4 mr-2" />
-                  準備解除
-                </>
-              ) : (
-                <>
-                  <ReadyIcon className="h-4 w-4 mr-2" />
-                  準備完了
-                </>
-              )}
-            </Button>
-            {isHost && (
-              <Button onClick={() => void startGame()} disabled={!canStart} className="flex-1">
-                <PlayIcon className="h-4 w-4 mr-2" />
-                ゲーム開始
-              </Button>
-            )}
-          </div>
-        )}
+
 
         {isSpectator && currentRoom.isStarted && (
           <p className="text-center text-sm text-muted-foreground">

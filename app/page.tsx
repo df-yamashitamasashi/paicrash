@@ -97,17 +97,26 @@ export default function MahjongPuzzleGame() {
     URL.revokeObjectURL(url);
   };
 
-  const handleMultiplayerGameEnd = useCallback((payload: { winnerName: string; isPlayerWin: boolean; isSpectator?: boolean }) => {
+  const handleMultiplayerGameEnd = useCallback((payload: { 
+    winnerName: string; 
+    isPlayerWin: boolean; 
+    isSpectator?: boolean;
+    playerScore: number;
+    opponentScore: number;
+    opponentName: string;
+    playerHistory: import('@/lib/mahjong-types').ClearResult[];
+    opponentHistory: import('@/lib/mahjong-types').ClearResult[];
+  }) => {
     setIsResultMinimized(false);
     setGameResult({
       winnerName: payload.winnerName,
       isPlayerWin: payload.isPlayerWin,
       isSpectator: payload.isSpectator ?? false,
-      playerScore: 0,
-      opponentScore: 0,
-      opponentName: 'Opponent',
-      playerHistory: [],
-      opponentHistory: [],
+      playerScore: payload.playerScore,
+      opponentScore: payload.opponentScore,
+      opponentName: payload.opponentName,
+      playerHistory: payload.playerHistory,
+      opponentHistory: payload.opponentHistory,
     });
   }, []);
 

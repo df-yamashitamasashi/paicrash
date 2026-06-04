@@ -21,7 +21,17 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 interface MultiplayerGameProps {
-  onGameEnd: (payload: { winnerId: string; winnerName: string; isPlayerWin: boolean; isSpectator: boolean }) => void;
+  onGameEnd: (payload: { 
+    winnerId: string; 
+    winnerName: string; 
+    isPlayerWin: boolean; 
+    isSpectator: boolean;
+    playerScore: number;
+    opponentScore: number;
+    opponentName: string;
+    playerHistory: import('@/lib/mahjong-types').ClearResult[];
+    opponentHistory: import('@/lib/mahjong-types').ClearResult[];
+  }) => void;
 }
 
 export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
@@ -181,16 +191,57 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
     // Add 3.5 seconds delay so players can see the final board state
     gameEndedCalledRef.current = true;
     const timer = setTimeout(() => {
+      let pScore = 0;
+      let oScore = 0;
+      let oName = 'Opponent';
+      let pHistory: import('@/lib/mahjong-types').ClearResult[] = [];
+      let oHistory: import('@/lib/mahjong-types').ClearResult[] = [];
+
+      if (isSpectator && matchSnapshot?.players.length === 2) {
+        pScore = matchSnapshot.players[0].gameState.score;
+        pHistory = matchSnapshot.players[0].gameState.clearHistory;
+        oScore = matchSnapshot.players[1].gameState.score;
+        oName = matchSnapshot.players[1].playerName;
+        oHistory = matchSnapshot.players[1].gameState.clearHistory;
+      } else {
+        pScore = mySnapshot?.gameState.score ?? 0;
+        oScore = opponentSnapshot?.gameState.score ?? 0;
+        oName = opponentSnapshot?.playerName ?? 'Opponent';
+        pHistory = mySnapshot?.gameState.clearHistory ?? [];
+        oHistory = opponentSnapshot?.gameState.clearHistory ?? [];
+      }
+
+      // Also ensure we use the final score from lastGameOver if available
+      if (lastGameOver) {
+        if (isSpectator && lastGameOver.scores.length >= 2) {
+          pScore = lastGameOver.scores[0].score;
+          oScore = lastGameOver.scores[1].score;
+        } else {
+          const myFinalScore = lastGameOver.scores.find(s => s.playerId === playerId);
+          if (myFinalScore) pScore = myFinalScore.score;
+          const oppFinalScore = lastGameOver.scores.find(s => s.playerId !== playerId);
+          if (oppFinalScore) {
+            oScore = oppFinalScore.score;
+            oName = oppFinalScore.playerName;
+          }
+        }
+      }
+
       onGameEnd({
         winnerId: lastGameOver.winnerId,
         winnerName: lastGameOver.winnerName,
         isPlayerWin: lastGameOver.winnerId === playerId,
         isSpectator,
+        playerScore: pScore,
+        opponentScore: oScore,
+        opponentName: oName,
+        playerHistory: pHistory,
+        opponentHistory: oHistory,
       });
     }, 3500);
 
     return () => clearTimeout(timer);
-  }, [lastGameOver, isSpectator, onGameEnd, playerId]);
+  }, [lastGameOver, isSpectator, onGameEnd, playerId, matchSnapshot, mySnapshot, opponentSnapshot]);
 
   if (!matchSnapshot) {
     return (
