@@ -60,6 +60,13 @@ export default function MahjongPuzzleGame() {
     setGameMode(mode);
   };
 
+  // Ensure BGM stops when returning to menu or lobby via any state change
+  useEffect(() => {
+    if (gameMode === 'menu' || gameMode === 'multiplayer-lobby') {
+      stopBgm();
+    }
+  }, [gameMode, stopBgm]);
+
   const downloadReport = () => {
     playClick();
     if (!lastGameOver) return;
@@ -110,6 +117,7 @@ export default function MahjongPuzzleGame() {
 
   const handleResultClose = () => {
     playClick();
+    stopBgm();
     setGameResult(null);
     setIsResultMinimized(false);
     useMultiplayerStore.getState().setLastGameOver(null);

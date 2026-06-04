@@ -354,7 +354,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
         <div className="shrink-0 p-2 bg-card/80 border-t border-border backdrop-blur-sm relative z-50">
           <GameControls
             onMove={(dir) => sendPlayerInput(dir === 'left' ? 'move-left' : 'move-right')}
-            onDrop={() => {}}
+            onDrop={() => sendPlayerInput('soft-drop')}
             onHardDrop={() => sendPlayerInput('hard-drop')}
             onPause={togglePause}
             onReset={startMatch}

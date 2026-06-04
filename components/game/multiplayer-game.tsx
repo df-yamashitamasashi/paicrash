@@ -479,11 +479,11 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
         </div>
 
         {/* Fixed bottom controls */}
-        <div className="shrink-0 p-2 pb-6 bg-card/90 border-t border-border backdrop-blur-sm">
+        <div className="shrink-0 p-2 pb-6 bg-card/90 border-t border-border backdrop-blur-sm relative z-50">
 
           <GameControls
             onMove={(dir) => void sendGameInput(dir === 'left' ? 'move-left' : 'move-right')}
-            onDrop={() => {}}
+            onDrop={() => void sendGameInput('soft-drop')}
             onHardDrop={() => void sendGameInput('hard-drop')}
             onPause={() => {}}
             onReset={() => {}}
