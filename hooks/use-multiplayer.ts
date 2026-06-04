@@ -270,9 +270,37 @@ export function useMultiplayer() {
     const matchSnapshot = useMultiplayerStore.getState().matchSnapshot;
     if (!matchSnapshot) return;
     
-    const opponent = matchSnapshot.players.find(p => p.playerId !== loserId);
-    const winnerId = opponent ? opponent.playerId : loserId;
-    const winnerName = opponent ? opponent.playerName : 'Unknown';
+    const p1 = matchSnapshot.players[0];
+    const p2 = matchSnapshot.players[1];
+    
+    let winnerId = '';
+    let winnerName = 'Unknown';
+    
+    if (p1 && p2) {
+      if (p1.gameState.score > p2.gameState.score) {
+        winnerId = p1.playerId;
+        winnerName = p1.playerName;
+      } else if (p2.gameState.score > p1.gameState.score) {
+        winnerId = p2.playerId;
+        winnerName = p2.playerName;
+      } else {
+        if (p1.gameState.clearHistory.length > p2.gameState.clearHistory.length) {
+          winnerId = p1.playerId;
+          winnerName = p1.playerName;
+        } else if (p2.gameState.clearHistory.length > p1.gameState.clearHistory.length) {
+          winnerId = p2.playerId;
+          winnerName = p2.playerName;
+        } else {
+          const survivor = matchSnapshot.players.find(p => p.playerId !== loserId);
+          winnerId = survivor ? survivor.playerId : loserId;
+          winnerName = survivor ? survivor.playerName : 'Unknown';
+        }
+      }
+    } else {
+      const opponent = matchSnapshot.players.find(p => p.playerId !== loserId);
+      winnerId = opponent ? opponent.playerId : loserId;
+      winnerName = opponent ? opponent.playerName : 'Unknown';
+    }
     
     const payload: GameOverPayload = {
       roomId,
