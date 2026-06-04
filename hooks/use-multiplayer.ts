@@ -456,6 +456,18 @@ export function useMultiplayer() {
     await update(ref(db, `rooms/${currentRoom.id}/players/${playerId}`), {
       isReady: nextReady
     });
+
+    if (nextReady && me) {
+      const newMsgRef = push(ref(db, `rooms/${currentRoom.id}/chat`));
+      await set(newMsgRef, {
+        id: newMsgRef.key,
+        playerId: 'system',
+        playerName: 'System',
+        text: `${me.name}さんの準備ができました！`,
+        timestamp: Date.now(),
+        role: 'system'
+      });
+    }
   }, [store]);
 
   const startGame = useCallback(async () => {
