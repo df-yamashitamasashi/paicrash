@@ -181,6 +181,11 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
     }
   }, [lastGameOver]);
 
+  const latestDataRef = useRef({ matchSnapshot, mySnapshot, opponentSnapshot, isSpectator, playerId });
+  useEffect(() => {
+    latestDataRef.current = { matchSnapshot, mySnapshot, opponentSnapshot, isSpectator, playerId };
+  }, [matchSnapshot, mySnapshot, opponentSnapshot, isSpectator, playerId]);
+
   useEffect(() => {
     if (!lastGameOver) {
       gameEndedCalledRef.current = false;
@@ -191,35 +196,37 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
     // Add 3.5 seconds delay so players can see the final board state
     gameEndedCalledRef.current = true;
     const timer = setTimeout(() => {
+      const { matchSnapshot: currentMatch, mySnapshot: currentMy, opponentSnapshot: currentOpp, isSpectator: currentSpec, playerId: currentPid } = latestDataRef.current;
+
       let pScore = 0;
       let oScore = 0;
       let oName = 'Opponent';
       let pHistory: import('@/lib/mahjong-types').ClearResult[] = [];
       let oHistory: import('@/lib/mahjong-types').ClearResult[] = [];
 
-      if (isSpectator && matchSnapshot?.players.length === 2) {
-        pScore = matchSnapshot.players[0].gameState.score;
-        pHistory = matchSnapshot.players[0].gameState.clearHistory ?? [];
-        oScore = matchSnapshot.players[1].gameState.score;
-        oName = matchSnapshot.players[1].playerName;
-        oHistory = matchSnapshot.players[1].gameState.clearHistory ?? [];
+      if (currentSpec && currentMatch?.players.length === 2) {
+        pScore = currentMatch.players[0].gameState.score;
+        pHistory = currentMatch.players[0].gameState.clearHistory ?? [];
+        oScore = currentMatch.players[1].gameState.score;
+        oName = currentMatch.players[1].playerName;
+        oHistory = currentMatch.players[1].gameState.clearHistory ?? [];
       } else {
-        pScore = mySnapshot?.gameState.score ?? 0;
-        oScore = opponentSnapshot?.gameState.score ?? 0;
-        oName = opponentSnapshot?.playerName ?? 'Opponent';
-        pHistory = mySnapshot?.gameState.clearHistory ?? [];
-        oHistory = opponentSnapshot?.gameState.clearHistory ?? [];
+        pScore = currentMy?.gameState.score ?? 0;
+        oScore = currentOpp?.gameState.score ?? 0;
+        oName = currentOpp?.playerName ?? 'Opponent';
+        pHistory = currentMy?.gameState.clearHistory ?? [];
+        oHistory = currentOpp?.gameState.clearHistory ?? [];
       }
 
       // Also ensure we use the final score from lastGameOver if available
       if (lastGameOver) {
-        if (isSpectator && lastGameOver.scores.length >= 2) {
+        if (currentSpec && lastGameOver.scores.length >= 2) {
           pScore = lastGameOver.scores[0].score;
           oScore = lastGameOver.scores[1].score;
         } else {
-          const myFinalScore = lastGameOver.scores.find(s => s.playerId === playerId);
+          const myFinalScore = lastGameOver.scores.find(s => s.playerId === currentPid);
           if (myFinalScore) pScore = myFinalScore.score;
-          const oppFinalScore = lastGameOver.scores.find(s => s.playerId !== playerId);
+          const oppFinalScore = lastGameOver.scores.find(s => s.playerId !== currentPid);
           if (oppFinalScore) {
             oScore = oppFinalScore.score;
             oName = oppFinalScore.playerName;
@@ -230,8 +237,8 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
       onGameEnd({
         winnerId: lastGameOver.winnerId,
         winnerName: lastGameOver.winnerName,
-        isPlayerWin: lastGameOver.winnerId === playerId,
-        isSpectator,
+        isPlayerWin: lastGameOver.winnerId === currentPid,
+        isSpectator: currentSpec,
         playerScore: pScore,
         opponentScore: oScore,
         opponentName: oName,
@@ -241,7 +248,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
     }, 3500);
 
     return () => clearTimeout(timer);
-  }, [lastGameOver, isSpectator, onGameEnd, playerId, matchSnapshot, mySnapshot, opponentSnapshot]);
+  }, [lastGameOver, onGameEnd]);
 
   if (!matchSnapshot) {
     return (
