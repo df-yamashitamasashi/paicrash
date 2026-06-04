@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+
 import { useSession, signOut } from 'next-auth/react';
 import { SinglePlayerGame } from '@/components/game/single-player';
 import { MultiplayerLobby } from '@/components/game/multiplayer-lobby';
@@ -10,10 +11,11 @@ import { YakuGuide } from '@/components/game/yaku-guide';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { SettingsDialog } from '@/components/game/settings-dialog';
 import { useMultiplayerStore } from '@/lib/multiplayer-store';
 import { useMultiplayer } from '@/hooks/use-multiplayer';
 import type { BattleReport } from '@/lib/multiplayer-protocol';
-import { Trophy, Download, Volume2, VolumeX, Music, Maximize2 } from 'lucide-react';
+import { Trophy, Download, Volume2, VolumeX, Settings, Maximize2 } from 'lucide-react';
 import { TileLogoIcon, SinglePlayerIcon, MultiplayerIcon, GuideIcon } from '@/components/icons/mahjong';
 import { useAudio } from '@/hooks/use-audio';
 
@@ -29,13 +31,14 @@ export default function MahjongPuzzleGame() {
   const { data: session } = useSession();
   const [gameMode, setGameMode] = useState<GameMode>('menu');
   const [showYakuGuide, setShowYakuGuide] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
   const [isResultMinimized, setIsResultMinimized] = useState(false);
   const multiplayerStatus = useMultiplayerStore((s) => s.status);
   const matchSnapshot = useMultiplayerStore((s) => s.matchSnapshot);
   const lastGameOver = useMultiplayerStore((s) => s.lastGameOver);
   const { leaveRoom } = useMultiplayer();
-  const { isMuted, sfxVol, bgmVol, toggleMute, updateSfxVolume, updateBgmVolume, playClick, enableAudio, stopBgm } = useAudio();
+  const { isMuted, toggleMute, playClick, enableAudio, stopBgm } = useAudio();
 
   // Initialize/start audio BGM on mount if not muted, but wait for user interaction to resume audio context
   useEffect(() => {
@@ -139,7 +142,7 @@ export default function MahjongPuzzleGame() {
            style={{ backgroundImage: 'radial-gradient(circle at center, currentColor 2px, transparent 2px)', backgroundSize: '32px 32px' }} />
       
       {/* Audio & Settings Control Panel */}
-      <div className="absolute top-4 left-4 z-50 flex items-center gap-2 bg-card/85 backdrop-blur-md px-3 py-1.5 rounded-full border shadow-sm">
+      <div className="absolute top-4 left-4 z-50 flex items-center gap-1.5 bg-card/85 backdrop-blur-md px-2 py-1.5 rounded-full border shadow-sm">
         <Button
           variant="ghost"
           size="icon"
@@ -148,36 +151,22 @@ export default function MahjongPuzzleGame() {
             playClick();
             toggleMute();
           }}
+          title={isMuted ? 'ミュート解除' : 'ミュート'}
         >
           {isMuted ? <VolumeX className="h-4 w-4 text-destructive" /> : <Volume2 className="h-4 w-4 text-primary" />}
         </Button>
-        {!isMuted && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground animate-in slide-in-from-left duration-200">
-            <span className="flex items-center gap-1 font-bold text-[10px]">
-              <Music className="h-3 w-3" />
-              BGM
-            </span>
-            <input
-              type="range"
-              min="0"
-              max="0.5"
-              step="0.05"
-              value={bgmVol}
-              onChange={(e) => updateBgmVolume(parseFloat(e.target.value))}
-              className="w-16 accent-primary h-1 rounded-lg cursor-pointer"
-            />
-            <span className="font-bold text-[10px] ml-1">SFX</span>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={sfxVol}
-              onChange={(e) => updateSfxVolume(parseFloat(e.target.value))}
-              className="w-16 accent-primary h-1 rounded-lg cursor-pointer"
-            />
-          </div>
-        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-full"
+          onClick={() => {
+            playClick();
+            setShowSettings(true);
+          }}
+          title="設定"
+        >
+          <Settings className="h-4 w-4 text-muted-foreground" />
+        </Button>
       </div>
 
       <div className="max-w-6xl mx-auto relative z-10">
@@ -346,6 +335,7 @@ export default function MahjongPuzzleGame() {
         )}
 
         <YakuGuide open={showYakuGuide} onOpenChange={setShowYakuGuide} />
+        <SettingsDialog open={showSettings} onOpenChange={setShowSettings} />
 
         <Dialog open={!!gameResult && !isResultMinimized} onOpenChange={(open) => {
           if (!open) setIsResultMinimized(true);
