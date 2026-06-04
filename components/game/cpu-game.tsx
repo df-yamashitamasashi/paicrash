@@ -15,7 +15,15 @@ import { cn } from '@/lib/utils';
 import type { MahjongTile } from '@/lib/mahjong-types';
 
 interface CpuGameProps {
-  onGameEnd: (payload: { winnerName: string; isPlayerWin: boolean }) => void;
+  onGameEnd: (payload: {
+    winnerName: string;
+    isPlayerWin: boolean;
+    playerScore: number;
+    opponentScore: number;
+    opponentName: string;
+    playerHistory: import('@/lib/mahjong-types').ClearResult[];
+    opponentHistory: import('@/lib/mahjong-types').ClearResult[];
+  }) => void;
 }
 
 export function CpuGame({ onGameEnd }: CpuGameProps) {
@@ -107,10 +115,15 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
       onGameEnd({
         winnerName: winner === 'player' ? 'あなた' : 'CPU',
         isPlayerWin: winner === 'player',
+        playerScore: playerState?.score ?? 0,
+        opponentScore: cpuState?.score ?? 0,
+        opponentName: 'CPU',
+        playerHistory: playerState?.clearHistory ?? [],
+        opponentHistory: cpuState?.clearHistory ?? [],
       });
     }, 3500);
     return () => clearTimeout(timer);
-  }, [isGameOver, winner, onGameEnd]);
+  }, [isGameOver, winner, onGameEnd, playerState, cpuState]);
 
   if (!playerState || !cpuState) {
     return (

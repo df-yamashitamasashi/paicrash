@@ -368,19 +368,23 @@ export function useCpuGame() {
     return () => clearInterval(interval);
   }, [gameState.cpu?.level, isGameOver, cpuSpeed, countdown, isPaused]);
 
-  // Check Game Over
+  // Check Game Over — winner is determined by highest score, not survival
   useEffect(() => {
     if (isGameOver) return;
-    if (gameState.player?.isGameOver) {
-      audio.playGameOver();
-      audio.stopBgm();
-      setIsGameOver(true);
-      setWinner('cpu');
-    } else if (gameState.cpu?.isGameOver) {
-      audio.playGameOver();
-      audio.stopBgm();
-      setIsGameOver(true);
+    const anyGameOver = gameState.player?.isGameOver || gameState.cpu?.isGameOver;
+    if (!anyGameOver) return;
+    
+    audio.playGameOver();
+    audio.stopBgm();
+    setIsGameOver(true);
+    
+    const playerScore = gameState.player?.score ?? 0;
+    const cpuScore = gameState.cpu?.score ?? 0;
+    
+    if (playerScore >= cpuScore) {
       setWinner('player');
+    } else {
+      setWinner('cpu');
     }
   }, [gameState.player?.isGameOver, gameState.cpu?.isGameOver, isGameOver]);
 

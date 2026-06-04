@@ -10,29 +10,26 @@ import { CpuGame } from '@/components/game/cpu-game';
 import { YakuGuide } from '@/components/game/yaku-guide';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { SettingsDialog } from '@/components/game/settings-dialog';
+import { GameResultDialog } from '@/components/game/game-result-dialog';
+import type { GameResultData } from '@/components/game/game-result-dialog';
 import { useMultiplayerStore } from '@/lib/multiplayer-store';
 import { useMultiplayer } from '@/hooks/use-multiplayer';
 import type { BattleReport } from '@/lib/multiplayer-protocol';
-import { Trophy, Download, Volume2, VolumeX, Settings, Maximize2 } from 'lucide-react';
+import { Volume2, VolumeX, Settings, Maximize2 } from 'lucide-react';
 import { TileLogoIcon, SinglePlayerIcon, MultiplayerIcon, GuideIcon } from '@/components/icons/mahjong';
 import { useAudio } from '@/hooks/use-audio';
 
 type GameMode = 'menu' | 'single' | 'cpu' | 'multiplayer-lobby' | 'multiplayer-game';
 
-interface GameResult {
-  winnerName: string;
-  isPlayerWin: boolean;
-  isSpectator: boolean;
-}
+
 
 export default function MahjongPuzzleGame() {
   const { data: session } = useSession();
   const [gameMode, setGameMode] = useState<GameMode>('menu');
   const [showYakuGuide, setShowYakuGuide] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [gameResult, setGameResult] = useState<GameResult | null>(null);
+  const [gameResult, setGameResult] = useState<GameResultData | null>(null);
   const [isResultMinimized, setIsResultMinimized] = useState(false);
   const multiplayerStatus = useMultiplayerStore((s) => s.status);
   const matchSnapshot = useMultiplayerStore((s) => s.matchSnapshot);
@@ -106,15 +103,33 @@ export default function MahjongPuzzleGame() {
       winnerName: payload.winnerName,
       isPlayerWin: payload.isPlayerWin,
       isSpectator: payload.isSpectator ?? false,
+      playerScore: 0,
+      opponentScore: 0,
+      opponentName: 'Opponent',
+      playerHistory: [],
+      opponentHistory: [],
     });
   }, []);
 
-  const handleCpuGameEnd = useCallback((payload: { winnerName: string; isPlayerWin: boolean }) => {
+  const handleCpuGameEnd = useCallback((payload: {
+    winnerName: string;
+    isPlayerWin: boolean;
+    playerScore: number;
+    opponentScore: number;
+    opponentName: string;
+    playerHistory: import('@/lib/mahjong-types').ClearResult[];
+    opponentHistory: import('@/lib/mahjong-types').ClearResult[];
+  }) => {
     setIsResultMinimized(false);
     setGameResult({
       winnerName: payload.winnerName,
       isPlayerWin: payload.isPlayerWin,
       isSpectator: false,
+      playerScore: payload.playerScore,
+      opponentScore: payload.opponentScore,
+      opponentName: payload.opponentName,
+      playerHistory: payload.playerHistory,
+      opponentHistory: payload.opponentHistory,
     });
   }, []);
 
@@ -337,70 +352,28 @@ export default function MahjongPuzzleGame() {
         <YakuGuide open={showYakuGuide} onOpenChange={setShowYakuGuide} />
         <SettingsDialog open={showSettings} onOpenChange={setShowSettings} />
 
-        <Dialog open={!!gameResult && !isResultMinimized} onOpenChange={(open) => {
-          if (!open) setIsResultMinimized(true);
-        }}>
-          <DialogContent className="text-center sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center justify-center gap-2 text-2xl">
-                {gameResult?.isSpectator ? (
-                  <>
-                    <Trophy className="text-primary" />
-                    試合終了
-                  </>
-                ) : (
-                  <>
-                    <Trophy className={gameResult?.isPlayerWin ? 'text-primary' : 'text-muted-foreground'} />
-                    {gameResult?.isPlayerWin ? '勝利!' : '敗北...'}
-                  </>
-                )}
-              </DialogTitle>
-              <DialogDescription className="text-base font-medium">
-                {gameResult?.isSpectator
-                  ? `勝者: ${gameResult?.winnerName}`
-                  : gameResult?.isPlayerWin
-                  ? 'おめでとうございます！見事な勝利です。'
-                  : `勝者: ${gameResult?.winnerName ?? '対戦相手'}`}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col gap-4 mt-4 items-center">
-              {lastGameOver && gameMode === 'multiplayer-game' && (
-                <Button variant="outline" size="sm" onClick={downloadReport} className="w-fit">
-                  <Download className="w-4 h-4 mr-2" />
-                  レポートをダウンロード
-                </Button>
-              )}
-              <div className="flex gap-3 justify-center w-full">
-                <Button onClick={handleResultClose} className="flex-1 min-w-0 bg-yellow-200 hover:bg-yellow-300 text-yellow-950 font-bold border-none">
-                  メニューに戻る
-                </Button>
-                <Button
-                  className="flex-1 min-w-0"
-                  onClick={() => {
-                    playClick();
-                    setGameResult(null);
-                    setIsResultMinimized(false);
-                    useMultiplayerStore.getState().setLastGameOver(null);
-                    if (gameMode === 'multiplayer-game' || gameMode === 'multiplayer-lobby') {
-                      setGameMode('multiplayer-lobby');
-                    } else {
-                      // Force remount by briefly unmounting the game component
-                      const currentMode = gameMode;
-                      setGameMode('menu');
-                      requestAnimationFrame(() => setGameMode(currentMode));
-                    }
-                  }}
-                >
-                  もう一度
-                </Button>
-              </div>
-              
-              <Button variant="ghost" size="sm" onClick={() => setIsResultMinimized(true)} className="text-muted-foreground w-full mt-2">
-                盤面を確認する（最小化）
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <GameResultDialog
+          result={gameResult}
+          isMinimized={isResultMinimized}
+          onMinimize={() => setIsResultMinimized(true)}
+          onRestore={() => setIsResultMinimized(false)}
+          onClose={handleResultClose}
+          onRematch={() => {
+            playClick();
+            setGameResult(null);
+            setIsResultMinimized(false);
+            useMultiplayerStore.getState().setLastGameOver(null);
+            if (gameMode === 'multiplayer-game' || gameMode === 'multiplayer-lobby') {
+              setGameMode('multiplayer-lobby');
+            } else {
+              const currentMode = gameMode;
+              setGameMode('menu');
+              requestAnimationFrame(() => setGameMode(currentMode));
+            }
+          }}
+          onDownloadReport={downloadReport}
+          showDownload={!!lastGameOver && gameMode === 'multiplayer-game'}
+        />
         
         {/* Minimized Result Button */}
         {!!gameResult && isResultMinimized && (
@@ -411,7 +384,7 @@ export default function MahjongPuzzleGame() {
               className="rounded-full shadow-xl shadow-primary/20 bg-card hover:bg-card/90 text-foreground border border-border gap-2 px-6 h-14"
             >
               <Maximize2 className="w-5 h-5 text-primary" />
-              <span className="font-bold">結果ダイアログを開く</span>
+              <span className="font-bold">結果を表示</span>
             </Button>
           </div>
         )}
