@@ -67,36 +67,6 @@ export default function MahjongPuzzleGame() {
     }
   }, [gameMode, stopBgm]);
 
-  const downloadReport = () => {
-    playClick();
-    if (!lastGameOver) return;
-
-    const report: BattleReport = {
-      schemaVersion: '1.0',
-      roomId: lastGameOver.roomId,
-      roomName: lastGameOver.roomName,
-      startedAt: new Date(lastGameOver.startedAt).toISOString(),
-      endedAt: new Date(lastGameOver.endedAt).toISOString(),
-      winnerName: lastGameOver.winnerName,
-      players: lastGameOver.scores.map(s => ({
-        playerName: s.playerName,
-        score: s.score,
-        isWinner: s.playerId === lastGameOver.winnerId,
-      })),
-    };
-
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const dateStr = new Date(lastGameOver.endedAt).toISOString().split('T')[0].replace(/-/g, '');
-    a.download = `paicrash-battle-${lastGameOver.roomId}-${dateStr}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   const handleMultiplayerGameEnd = useCallback((payload: { 
     winnerName: string; 
     isPlayerWin: boolean; 
@@ -380,8 +350,6 @@ export default function MahjongPuzzleGame() {
               requestAnimationFrame(() => setGameMode(currentMode));
             }
           }}
-          onDownloadReport={downloadReport}
-          showDownload={!!lastGameOver && gameMode === 'multiplayer-game'}
         />
         
         {/* Minimized Result Button */}

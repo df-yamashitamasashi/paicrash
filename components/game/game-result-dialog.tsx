@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Trophy, Download, Crown, Swords, Flame, Star, Zap } from 'lucide-react';
+import { Trophy, Crown, Swords, Flame, Star, Zap } from 'lucide-react';
 import type { ClearResult } from '@/lib/mahjong-types';
 import { cn } from '@/lib/utils';
 
@@ -31,8 +31,6 @@ interface GameResultDialogProps {
   onRestore: () => void;
   onClose: () => void;
   onRematch: () => void;
-  onDownloadReport?: () => void;
-  showDownload?: boolean;
 }
 
 function getScoreRank(score: number): { label: string; color: string } {
@@ -171,8 +169,6 @@ export function GameResultDialog({
   onRestore,
   onClose,
   onRematch,
-  onDownloadReport,
-  showDownload = false,
 }: GameResultDialogProps) {
   const [revealPhase, setRevealPhase] = useState(0);
   // 0 = show header, 1 = meter + scores, 2 = breakdown, 3 = result + buttons
@@ -373,12 +369,6 @@ export function GameResultDialog({
             "flex flex-col gap-3 pt-2 transition-all duration-700 ease-out",
             revealPhase >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
-            {showDownload && onDownloadReport && (
-              <Button variant="outline" size="sm" onClick={onDownloadReport} className="w-fit mx-auto">
-                <Download className="w-4 h-4 mr-2" />
-                レポートをダウンロード
-              </Button>
-            )}
             <div className="flex gap-3 justify-center w-full">
               <Button onClick={onClose} className="flex-1 min-w-0 bg-yellow-200 hover:bg-yellow-300 text-yellow-950 font-bold border-none">
                 メニューに戻る

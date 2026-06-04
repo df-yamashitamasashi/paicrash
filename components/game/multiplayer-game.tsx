@@ -14,11 +14,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import type { GameState, MahjongTile } from '@/lib/mahjong-types';
 import type { BattleReport } from '@/lib/multiplayer-protocol';
-import { Eye, Download, FileText } from 'lucide-react';
+import { Eye, FileText } from 'lucide-react';
 import { Tile } from './tile';
 import { NicoCommentsOverlay } from './nico-comments-overlay';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 interface MultiplayerGameProps {
   onGameEnd: (payload: { 
@@ -152,34 +150,6 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
-
-  const downloadReport = useCallback(async () => {
-    if (!lastGameOver) return;
-
-    const element = document.getElementById('pdf-report-container');
-    if (!element) return;
-
-    try {
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'px',
-        format: [800, 600]
-      });
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, 800, 600);
-      const dateStr = new Date(lastGameOver.endedAt).toISOString().split('T')[0].replace(/-/g, '');
-      pdf.save(`paicrash-certificate-${lastGameOver.roomId}-${dateStr}.pdf`);
-    } catch (err) {
-      console.error('Failed to generate PDF:', err);
-    }
-  }, [lastGameOver]);
 
   const latestDataRef = useRef({ matchSnapshot, mySnapshot, opponentSnapshot, isSpectator, playerId });
   useEffect(() => {
@@ -317,10 +287,6 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
           <Alert className="max-w-lg">
             <AlertDescription className="flex flex-col gap-2">
               <span>勝者: {lastGameOver.winnerName}（{lastGameOver.scores.map((s) => `${s.playerName}: ${s.score}`).join(' / ')}）</span>
-              <Button variant="outline" size="sm" onClick={() => void downloadReport()} className="w-fit">
-                <FileText className="w-4 h-4 mr-2" />
-                戦績証明書(PDF)をダウンロード
-              </Button>
             </AlertDescription>
           </Alert>
         )}
