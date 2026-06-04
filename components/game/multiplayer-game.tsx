@@ -122,6 +122,10 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
           e.preventDefault();
           void sendGameInput('move-right');
           break;
+        case 'ArrowDown':
+          e.preventDefault();
+          void sendGameInput('soft-drop');
+          break;
         case ' ':
           e.preventDefault();
           void sendGameInput('hard-drop');

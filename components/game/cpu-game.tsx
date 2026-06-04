@@ -59,6 +59,10 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
           e.preventDefault();
           sendPlayerInput('move-right');
           break;
+        case 'ArrowDown':
+          e.preventDefault();
+          sendPlayerInput('soft-drop');
+          break;
         case ' ':
           e.preventDefault();
           sendPlayerInput('hard-drop');

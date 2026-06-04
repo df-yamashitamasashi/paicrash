@@ -138,20 +138,23 @@ export function useMultiplayer() {
       const current = useMultiplayerStore.getState();
       const isMatchOver = playersList.some(p => p.gameState?.isGameOver);
       
-      if (!prevMatch && matchSnapshotObj && !isMatchOver) {
+      const isJustStarted = !prevMatch && matchSnapshotObj && !isMatchOver;
+      const isReconnectingPlaying = matchSnapshotObj && !isMatchOver && current.role === 'player' && (!localGameStateRef.current || current.status !== 'playing');
+      
+      if (isJustStarted) {
         // Match started
         store.setLastGameOver(null);
         audio.enable();
         audio.startBgm();
-        
-        if (current.role === 'player') {
-          store.setStatus('playing');
-          // Initialize local game state
-          const myPlayer = matchSnapshotObj.players.find(p => p.playerId === myId);
-          if (myPlayer && myId) {
-            localGameStateRef.current = myPlayer.gameState;
-            startGameLoop(roomId, myId);
-          }
+      }
+      
+      if ((isJustStarted || isReconnectingPlaying) && current.role === 'player') {
+        store.setStatus('playing');
+        // Initialize local game state
+        const myPlayer = matchSnapshotObj.players.find(p => p.playerId === myId);
+        if (myPlayer && myId) {
+          localGameStateRef.current = myPlayer.gameState;
+          startGameLoop(roomId, myId);
         }
       }
     });

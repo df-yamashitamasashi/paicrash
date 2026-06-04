@@ -5,7 +5,7 @@ import { audio } from '@/lib/audio-manager';
 
 export function useYakumanAnimation(gameState: GameState | null, isPlayer: boolean = true) {
   const [animBoard, setAnimBoard] = useState<GameBoard | null>(null);
-  const isAnimatingRef = useRef(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const prevClearHistoryLength = useRef(0);
   
   useEffect(() => {
@@ -23,7 +23,7 @@ export function useYakumanAnimation(gameState: GameState | null, isPlayer: boole
       );
       
       if (yakumanClear && isPlayer) { // Only animate for the main player's board
-         isAnimatingRef.current = true;
+         setIsAnimating(true);
          
          // Reconstruct board for animation
          const board = JSON.parse(JSON.stringify(gameState.board)) as GameBoard;
@@ -45,7 +45,7 @@ export function useYakumanAnimation(gameState: GameState | null, isPlayer: boole
            
            setTimeout(() => {
              setAnimBoard(null);
-             isAnimatingRef.current = false;
+             setIsAnimating(false);
              useGameStore.setState({ isYakumanAnimating: false, isYakumanDissolving: false });
            }, 2000);
          }, 9000);
@@ -54,5 +54,6 @@ export function useYakumanAnimation(gameState: GameState | null, isPlayer: boole
     prevClearHistoryLength.current = clearHistory.length;
   }, [gameState, isPlayer]);
 
-  return { animBoard, isAnimating: isAnimatingRef.current };
+  return { animBoard, isAnimating };
 }
+
