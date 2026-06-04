@@ -229,7 +229,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
                 </div>
               </div>
             </div>
-            <div className="scale-[0.8] origin-top border-2 border-border/30 rounded-lg p-2 bg-card relative">
+            <div className="origin-top border-2 border-border/30 rounded-lg p-2 bg-card relative">
               <GameBoardComponent
                 board={cpuState.board}
                 currentTile={cpuState.currentTile}
@@ -237,6 +237,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
                 isPaused={false}
                 isOpponent={true}
                 countdown={countdown}
+                scale={0.8}
               />
               {cpuState.isGameOver && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm z-10 rounded-lg">
@@ -333,8 +334,8 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
           </div>
 
           {/* CPU Small Board */}
-          <div className="flex-1 flex justify-start items-center h-full max-h-full">
-            <div className="scale-[0.6] origin-left flex flex-col items-center">
+          <div className="shrink-0 flex justify-start items-center h-full max-h-full">
+            <div className="origin-left flex flex-col items-center">
               <div className="border border-border/30 rounded bg-card p-1 relative">
                 <GameBoardComponent
                   board={cpuState.board}
@@ -344,6 +345,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
                   isOpponent={true}
                   isMobile
                   countdown={countdown}
+                  scale={0.5}
                 />
                  {cpuState.isGameOver && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm z-10 rounded">
