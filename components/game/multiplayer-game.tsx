@@ -59,6 +59,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
   const touchLastX = useRef<number | null>(null);
   const touchStartTime = useRef<number>(0);
   const lastDropTime = useRef<number>(0);
+  const gameEndedCalledRef = useRef(false);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (isSpectator || mySnapshot?.gameState?.isGameOver || isPlayerAnimating) return;
@@ -169,9 +170,14 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
   }, [lastGameOver]);
 
   useEffect(() => {
-    if (!lastGameOver) return;
+    if (!lastGameOver) {
+      gameEndedCalledRef.current = false;
+      return;
+    }
+    if (gameEndedCalledRef.current) return;
     
     // Add 3.5 seconds delay so players can see the final board state
+    gameEndedCalledRef.current = true;
     const timer = setTimeout(() => {
       onGameEnd({
         winnerId: lastGameOver.winnerId,

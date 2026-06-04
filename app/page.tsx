@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { SinglePlayerGame } from '@/components/game/single-player';
 import { MultiplayerLobby } from '@/components/game/multiplayer-lobby';
@@ -90,14 +90,23 @@ export default function MahjongPuzzleGame() {
     URL.revokeObjectURL(url);
   };
 
-  const handleMultiplayerGameEnd = (payload: { winnerName: string; isPlayerWin: boolean; isSpectator?: boolean }) => {
+  const handleMultiplayerGameEnd = useCallback((payload: { winnerName: string; isPlayerWin: boolean; isSpectator?: boolean }) => {
     setIsResultMinimized(false);
     setGameResult({
       winnerName: payload.winnerName,
       isPlayerWin: payload.isPlayerWin,
       isSpectator: payload.isSpectator ?? false,
     });
-  };
+  }, []);
+
+  const handleCpuGameEnd = useCallback((payload: { winnerName: string; isPlayerWin: boolean }) => {
+    setIsResultMinimized(false);
+    setGameResult({
+      winnerName: payload.winnerName,
+      isPlayerWin: payload.isPlayerWin,
+      isSpectator: false,
+    });
+  }, []);
 
   const handleResultClose = () => {
     playClick();
@@ -317,14 +326,7 @@ export default function MahjongPuzzleGame() {
         )}
 
         {gameMode === 'cpu' && (
-          <CpuGame onGameEnd={(payload) => {
-            setIsResultMinimized(false);
-            setGameResult({
-              winnerName: payload.winnerName,
-              isPlayerWin: payload.isPlayerWin,
-              isSpectator: false,
-            });
-          }} />
+          <CpuGame onGameEnd={handleCpuGameEnd} />
         )}
 
         {gameMode === 'multiplayer-lobby' && !showMultiplayerMatch && (

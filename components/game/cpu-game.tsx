@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { useCpuGame } from '@/hooks/use-cpu-game';
 import { GameBoardComponent } from './game-board';
 import { GameStats } from './game-stats';
@@ -34,6 +34,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
   } = useCpuGame();
   const [showGuide, setShowGuide] = useState(false);
   const [hoveredTiles, setHoveredTiles] = useState<MahjongTile[] | null>(null);
+  const gameEndedCalledRef = useRef(false);
 
   useEffect(() => {
     startMatch();
@@ -93,15 +94,20 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
   }, [handleKeyDown]);
 
   useEffect(() => {
-    if (isGameOver && winner) {
-      const timer = setTimeout(() => {
-        onGameEnd({
-          winnerName: winner === 'player' ? 'あなた' : 'CPU',
-          isPlayerWin: winner === 'player',
-        });
-      }, 3500);
-      return () => clearTimeout(timer);
+    if (!isGameOver || !winner) {
+      gameEndedCalledRef.current = false;
+      return;
     }
+    if (gameEndedCalledRef.current) return;
+
+    gameEndedCalledRef.current = true;
+    const timer = setTimeout(() => {
+      onGameEnd({
+        winnerName: winner === 'player' ? 'あなた' : 'CPU',
+        isPlayerWin: winner === 'player',
+      });
+    }, 3500);
+    return () => clearTimeout(timer);
   }, [isGameOver, winner, onGameEnd]);
 
   if (!playerState || !cpuState) {

@@ -104,7 +104,10 @@ export const GameBoardComponent = React.memo(function GameBoardComponent({
             tile ? (
               <div
                 key={tile.id}
-                className="absolute transition-all duration-150"
+                className={cn(
+                  "absolute transition-all duration-150",
+                  highlightTiles && highlightTiles.length > 0 && "opacity-10 scale-95"
+                )}
                 style={{
                   left: x * cellSize,
                   top: y * cellSize,
@@ -123,7 +126,7 @@ export const GameBoardComponent = React.memo(function GameBoardComponent({
         )}
       </div>
       
-      {/* Highlighted Tiles from History (ghost + border) */}
+      {/* Highlighted Tiles from History (full opacity + border) */}
       {highlightTiles && highlightTiles.length > 0 && (
         <div className="absolute inset-2 z-20 pointer-events-none">
           {highlightTiles.map((tile, i) => (
@@ -136,19 +139,17 @@ export const GameBoardComponent = React.memo(function GameBoardComponent({
               }}
             >
               <div className="absolute inset-0 ring-2 ring-primary ring-offset-2 ring-offset-transparent rounded-lg z-10" />
-              <div className="opacity-60">
-                <Tile
-                  tile={tile}
-                  size={tileSize as 'sm' | 'md'}
-                />
-              </div>
+              <Tile
+                tile={tile}
+                size={tileSize as 'sm' | 'md'}
+              />
             </div>
           ))}
         </div>
       )}
       
       {/* Ghost tile (landing preview) */}
-      {currentTile && ghostY !== null && ghostY >= 0 && !isGameOver && !isPaused && !isYakumanAnimating && !isYakumanDissolving && (
+      {currentTile && ghostY !== null && ghostY >= 0 && !isGameOver && !isPaused && !isYakumanAnimating && !isYakumanDissolving && (!highlightTiles || highlightTiles.length === 0) && (
         <div
           className="absolute transition-all duration-75"
           style={{
@@ -161,7 +162,7 @@ export const GameBoardComponent = React.memo(function GameBoardComponent({
       )}
       
       {/* Current falling tile */}
-      {currentTile && !isGameOver && !isPaused && !isYakumanAnimating && !isYakumanDissolving && (
+      {currentTile && !isGameOver && !isPaused && !isYakumanAnimating && !isYakumanDissolving && (!highlightTiles || highlightTiles.length === 0) && (
         <div
           className="absolute transition-all duration-75 z-10"
           style={{
