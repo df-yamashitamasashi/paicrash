@@ -12,7 +12,7 @@ interface ClearHistoryProps {
 }
 
 // Suit color for tile display
-function tileColor(suit: string): string {
+export function tileColor(suit: string): string {
   switch (suit) {
     case 'manzu': return 'text-red-600';
     case 'pinzu': return 'text-blue-600';
@@ -21,7 +21,7 @@ function tileColor(suit: string): string {
   }
 }
 
-function formatTime(ts: number): string {
+export function formatTime(ts: number): string {
   const d = new Date(ts);
   const h = d.getHours().toString().padStart(2, '0');
   const m = d.getMinutes().toString().padStart(2, '0');
@@ -79,7 +79,7 @@ export function ClearHistory({ history, onHoverItem }: ClearHistoryProps) {
   );
 }
 
-function HistoryRow({ result, onHoverItem }: { result: ClearResult, onHoverItem?: (tiles: MahjongTile[] | null) => void }) {
+export function HistoryRow({ result, onHoverItem }: { result: ClearResult, onHoverItem?: (tiles: MahjongTile[] | null) => void }) {
   const isChain = result.chainCount > 0;
 
   return (

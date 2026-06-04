@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, ArrowDown, ChevronsDown, Pause, Play, RotateCcw, HelpCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowDown, ChevronsDown, Pause, Play, RotateCcw, HelpCircle, History } from 'lucide-react';
 
 interface GameControlsProps {
   onMove: (direction: 'left' | 'right') => void;
@@ -10,6 +10,7 @@ interface GameControlsProps {
   onPause: () => void;
   onReset: () => void;
   onShowGuide: () => void;
+  onShowHistory?: () => void;
   isPaused: boolean;
   isGameOver: boolean;
   isMobile?: boolean;
@@ -24,6 +25,7 @@ export function GameControls({
   onPause,
   onReset,
   onShowGuide,
+  onShowHistory,
   isPaused,
   isGameOver,
   isMobile = false,
@@ -35,26 +37,37 @@ export function GameControls({
       <div className="flex flex-col gap-3 pb-2">
         {/* Action bar */}
         <div className="flex gap-2 justify-end">
+          {onShowHistory && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onShowHistory}
+              className="h-10 w-10 shrink-0 rounded-full bg-card/80 backdrop-blur-sm"
+              title="履歴"
+            >
+              <History className="h-4 w-4" />
+            </Button>
+          )}
           {!hidePause && (
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onPause}
-            disabled={isGameOver}
-            className="h-10 w-10 shrink-0 rounded-full bg-card/80 backdrop-blur-sm"
-          >
-            {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-          </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onPause}
+              disabled={isGameOver}
+              className="h-10 w-10 shrink-0 rounded-full bg-card/80 backdrop-blur-sm"
+            >
+              {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+            </Button>
           )}
           {!hideReset && (
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onReset}
-            className="h-10 w-10 shrink-0 rounded-full bg-card/80 backdrop-blur-sm"
-          >
-            <RotateCcw className="h-4 w-4" />
-          </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onReset}
+              className="h-10 w-10 shrink-0 rounded-full bg-card/80 backdrop-blur-sm"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
           )}
           <Button
             variant="outline"

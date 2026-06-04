@@ -6,6 +6,7 @@ import { GameBoardComponent } from './game-board';
 import { GameStats } from './game-stats';
 import { GameControls } from './game-controls';
 import { YakuGuide } from './yaku-guide';
+import { HistoryDialog } from './history-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Bot } from 'lucide-react';
@@ -33,6 +34,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
     countdown
   } = useCpuGame();
   const [showGuide, setShowGuide] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [hoveredTiles, setHoveredTiles] = useState<MahjongTile[] | null>(null);
   const gameEndedCalledRef = useRef(false);
 
@@ -357,6 +359,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
             onPause={togglePause}
             onReset={startMatch}
             onShowGuide={() => setShowGuide(true)}
+            onShowHistory={() => setShowHistory(true)}
             isPaused={isPaused}
             isGameOver={isGameOver}
             isMobile
@@ -365,6 +368,14 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
       </div>
 
       <YakuGuide open={showGuide} onOpenChange={setShowGuide} />
+
+      {/* History modal */}
+      <HistoryDialog
+        open={showHistory}
+        onOpenChange={setShowHistory}
+        history={playerState.clearHistory}
+        onHoverItem={setHoveredTiles}
+      />
     </>
   );
 }

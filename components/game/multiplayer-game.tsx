@@ -7,6 +7,7 @@ import { GameBoardComponent } from './game-board';
 import { GameStats } from './game-stats';
 import { GameControls } from './game-controls';
 import { YakuGuide } from './yaku-guide';
+import { HistoryDialog } from './history-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -38,6 +39,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
   } = useMultiplayer();
 
   const [showGuide, setShowGuide] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [hoveredTiles, setHoveredTiles] = useState<MahjongTile[] | null>(null);
   const isSpectator = role === 'spectator';
 
@@ -477,7 +479,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
         </div>
 
         {/* Fixed bottom controls */}
-        <div className="shrink-0 p-2 pb-6 bg-card/90 border-t border-border backdrop-blur-md">
+        <div className="shrink-0 p-2 pb-6 bg-card/90 border-t border-border backdrop-blur-sm">
 
           <GameControls
             onMove={(dir) => void sendGameInput(dir === 'left' ? 'move-left' : 'move-right')}
@@ -486,6 +488,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
             onPause={() => {}}
             onReset={() => {}}
             onShowGuide={() => setShowGuide(true)}
+            onShowHistory={() => setShowHistory(true)}
             isPaused={false}
             isGameOver={myState.isGameOver}
             hidePause
@@ -496,6 +499,14 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
       </div>
 
       <YakuGuide open={showGuide} onOpenChange={setShowGuide} />
+
+      {/* History modal */}
+      <HistoryDialog
+        open={showHistory}
+        onOpenChange={setShowHistory}
+        history={myState.clearHistory || []}
+        onHoverItem={setHoveredTiles}
+      />
 
       {/* Nico Nico Comments */}
       <NicoCommentsOverlay />

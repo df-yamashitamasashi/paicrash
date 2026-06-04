@@ -107,6 +107,22 @@
 
 ---
 
+### 2026-06-04 — スマホ画面で履歴を確認できない問題の解消
+
+- **担当**: AI エージェント
+- **概要**: モバイルのコンパクト画面で省略されていた消去履歴（clearHistory）を確認できるよう、共通のダイアログ UI `HistoryDialog` を実装。モバイル用の操作パネル（GameControls）に履歴確認ボタンを追加し、シングル・CPU戦・マルチプレイの各モードのモバイル画面で履歴をダイアログ表示できるよう統合。
+- **変更ファイル**:
+  - `components/game/clear-history.tsx` (関数・Rowコンポーネントのexport追加)
+  - `components/game/history-dialog.tsx` (ダイアログUIの新規作成)
+  - `components/game/game-controls.tsx` (モバイルコントロールに履歴ボタン追加)
+  - `components/game/single-player.tsx` (モバイル版に履歴ダイアログの組み込み)
+  - `components/game/cpu-game.tsx` (モバイル版に履歴ダイアログの組み込み)
+  - `components/game/multiplayer-game.tsx` (モバイル版に履歴ダイアログの組み込み)
+- **セルフレビュー**: 1 pass, 3 pass, 6 pass, 10 pass, 11 pass, 12 pass
+- **次のアクション**: バックログのタスク消化
+
+---
+
 ## バックログ（未着手）
 
 | 優先 | タスク | 関連 |

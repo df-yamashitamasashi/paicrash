@@ -8,6 +8,7 @@ import { GameBoardComponent } from './game-board';
 import { GameStats } from './game-stats';
 import { GameControls } from './game-controls';
 import { YakuGuide } from './yaku-guide';
+import { HistoryDialog } from './history-dialog';
 import { Button } from '@/components/ui/button';
 import { Users } from 'lucide-react';
 
@@ -18,6 +19,7 @@ interface SinglePlayerGameProps {
 export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) {
   const { gameState, startGame, moveTile, dropTile, hardDrop, tick, togglePause, reset } = useGameStore();
   const [showGuide, setShowGuide] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [hoveredTiles, setHoveredTiles] = useState<MahjongTile[] | null>(null);
   const tickRef = useRef<NodeJS.Timeout | null>(null);
   const lastTickRef = useRef<number>(Date.now());
@@ -239,6 +241,7 @@ export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) 
             onPause={togglePause}
             onReset={reset}
             onShowGuide={() => setShowGuide(true)}
+            onShowHistory={() => setShowHistory(true)}
             isPaused={gameState.isPaused}
             isGameOver={gameState.isGameOver}
             isMobile
@@ -248,6 +251,14 @@ export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) 
       
       {/* Yaku guide modal */}
       <YakuGuide open={showGuide} onOpenChange={setShowGuide} />
+
+      {/* History modal */}
+      <HistoryDialog
+        open={showHistory}
+        onOpenChange={setShowHistory}
+        history={gameState.clearHistory}
+        onHoverItem={setHoveredTiles}
+      />
     </>
   );
 }
