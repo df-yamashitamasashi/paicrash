@@ -90,6 +90,7 @@ export function HistoryRow({ result, onHoverItem }: { result: ClearResult, onHov
       )}
       onMouseEnter={() => onHoverItem?.(result.tiles)}
       onMouseLeave={() => onHoverItem?.(null)}
+      onClick={() => onHoverItem?.(result.tiles)}
     >
       {/* Top row: time + yaku + score */}
       <div className="flex items-center justify-between gap-2 mb-1">
