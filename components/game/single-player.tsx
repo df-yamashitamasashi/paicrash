@@ -221,7 +221,7 @@ export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) 
         )}
         
         {/* Game board - fills remaining space */}
-        <div className={`flex-1 flex items-center justify-center p-2 w-full min-h-0 min-w-0 transition-all duration-300 ${showHistory ? 'pb-[30dvh]' : ''}`}>
+        <div className={`flex-1 flex items-center justify-center p-2 min-h-0 min-w-0 overflow-hidden transition-all duration-300 ${showHistory ? 'pb-[30dvh]' : ''}`}>
           <GameBoardComponent
             board={gameState.board}
             currentTile={gameState.currentTile}

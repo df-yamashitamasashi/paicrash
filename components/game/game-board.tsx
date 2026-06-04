@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import type { GameBoard, MahjongTile } from '@/lib/mahjong-types';
 import { Tile } from './tile';
 import { cn } from '@/lib/utils';
@@ -30,6 +30,7 @@ export const GameBoardComponent = React.memo(function GameBoardComponent({
   highlightTiles,
 }: GameBoardProps) {
   const boardRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // Read Yakuman and Countdown state from global game store
   const { isYakumanAnimating: globalYakumanAnimating, isYakumanDissolving: globalYakumanDissolving, yakumanName, countdown: storeCountdown } = useGameStore();
@@ -60,34 +61,56 @@ export const GameBoardComponent = React.memo(function GameBoardComponent({
   // Calculate dimensions and final scale
   const baseWidth = board.width * cellSize + 16;
   const baseHeight = board.height * cellSize + 16;
-  const finalScale = scale;
 
-  const shouldScaleToContainer = isMobile && !isOpponent;
+  // Auto-scale for mobile player boards: measure parent and fit
+  const shouldAutoScale = isMobile && !isOpponent;
+  const [autoScale, setAutoScale] = useState(1);
+
+  const computeScale = useCallback(() => {
+    if (!shouldAutoScale || !containerRef.current) return;
+    const parent = containerRef.current.parentElement;
+    if (!parent) return;
+    const parentW = parent.clientWidth;
+    const parentH = parent.clientHeight;
+    if (parentW <= 0 || parentH <= 0) return;
+    const s = Math.min(parentW / baseWidth, parentH / baseHeight);
+    // Clamp to reasonable range
+    setAutoScale(Math.min(s, 1));
+  }, [shouldAutoScale, baseWidth, baseHeight]);
+
+  useEffect(() => {
+    if (!shouldAutoScale) return;
+    computeScale();
+    const parent = containerRef.current?.parentElement;
+    if (!parent) return;
+    const ro = new ResizeObserver(() => computeScale());
+    ro.observe(parent);
+    return () => ro.disconnect();
+  }, [shouldAutoScale, computeScale]);
+
+  const finalScale = shouldAutoScale ? autoScale : scale;
 
   return (
     <div
-      className={cn("relative", shouldScaleToContainer && "w-full h-full flex items-center justify-center min-h-0 min-w-0")}
+      ref={containerRef}
       style={{
-        width: !shouldScaleToContainer ? baseWidth * finalScale : undefined,
-        height: !shouldScaleToContainer ? baseHeight * finalScale : undefined,
-        containerType: shouldScaleToContainer ? 'size' : undefined,
+        width: baseWidth * finalScale,
+        height: baseHeight * finalScale,
+        position: 'relative',
       }}
     >
       <div
         ref={boardRef}
         className={cn(
-          'absolute bg-card/90 rounded-3xl border-4 border-primary/60 overflow-hidden',
+          'absolute top-0 left-0 bg-card/90 rounded-3xl border-4 border-primary/60 overflow-hidden',
           'shadow-[0_0_40px_rgba(var(--primary),0.3)] backdrop-blur-md',
-          isYakumanAnimating && 'animate-yakuman-freeze', // Screen shake / freeze shake effect
-          !shouldScaleToContainer && 'top-0 left-0'
+          isYakumanAnimating && 'animate-yakuman-freeze' // Screen shake / freeze shake effect
         )}
         style={{
           width: baseWidth,
           height: baseHeight,
-          transform: shouldScaleToContainer
-            ? `scale(min(calc(100cqw / ${baseWidth}), calc(100cqh / ${baseHeight})))`
-            : `scale(${finalScale})`,
-          transformOrigin: shouldScaleToContainer ? 'center' : 'top left',
+          transform: `scale(${finalScale})`,
+          transformOrigin: 'top left',
         }}
       >
       {/* Background grid */}

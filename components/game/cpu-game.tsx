@@ -289,16 +289,16 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
         {/* Game Area - fills remaining space */}
         <div className={`flex-1 flex flex-row items-center justify-center gap-1 min-h-0 px-1 py-2 transition-all duration-300 ${showHistory ? 'pb-[30dvh]' : ''}`}>
           {/* Player Main Board */}
-          <div className="flex-1 flex justify-end items-center w-full h-full min-h-0 min-w-0">
+          <div className="flex-1 flex justify-center items-center h-full min-h-0 min-w-0 overflow-hidden">
             <GameBoardComponent
-                board={playerState.board}
-                currentTile={playerState.currentTile}
-                isGameOver={playerState.isGameOver}
-                isPaused={isPaused}
-                isMobile
-                countdown={countdown}
-                highlightTiles={hoveredTiles}
-              />
+              board={playerState.board}
+              currentTile={playerState.currentTile}
+              isGameOver={playerState.isGameOver}
+              isPaused={isPaused}
+              isMobile
+              countdown={countdown}
+              highlightTiles={hoveredTiles}
+            />
           </div>
 
           {/* Mobile middle stats */}
