@@ -276,16 +276,27 @@ export function useMultiplayer() {
         return;
       }
       const rooms = Object.values(data) as any[];
-      const available = rooms.map(r => ({
-        id: r.id,
-        name: r.name,
-        playerCount: r.players ? Object.keys(r.players).length : 0,
-        maxPlayers: r.maxPlayers,
-        spectatorCount: r.spectators ? Object.keys(r.spectators).length : 0,
-        maxSpectators: r.maxSpectators,
-        isStarted: r.isStarted,
-        createdAt: r.createdAt
-      }));
+      const available = rooms
+        .filter(r => {
+          const playerCount = r.players ? Object.keys(r.players).length : 0;
+          const spectatorCount = r.spectators ? Object.keys(r.spectators).length : 0;
+          if (playerCount === 0 && spectatorCount === 0) {
+            // Clean up stale empty room asynchronously
+            void remove(ref(db, `rooms/${r.id}`));
+            return false;
+          }
+          return true;
+        })
+        .map(r => ({
+          id: r.id,
+          name: r.name,
+          playerCount: r.players ? Object.keys(r.players).length : 0,
+          maxPlayers: r.maxPlayers,
+          spectatorCount: r.spectators ? Object.keys(r.spectators).length : 0,
+          maxSpectators: r.maxSpectators,
+          isStarted: r.isStarted,
+          createdAt: r.createdAt
+        }));
       store.setAvailableRooms(available);
     });
     
@@ -431,10 +442,27 @@ export function useMultiplayer() {
     const { playerId, currentRoom, role } = store;
     if (!playerId || !currentRoom) return;
 
+    const roomId = currentRoom.id;
+
     if (role === 'player') {
-      await remove(ref(db, `rooms/${currentRoom.id}/players/${playerId}`));
+      await remove(ref(db, `rooms/${roomId}/players/${playerId}`));
     } else {
-      await remove(ref(db, `rooms/${currentRoom.id}/spectators/${playerId}`));
+      await remove(ref(db, `rooms/${roomId}/spectators/${playerId}`));
+    }
+
+    // Check if anyone is left in the room, if not delete the room node
+    try {
+      const roomSnap = await get(ref(db, `rooms/${roomId}`));
+      if (roomSnap.exists()) {
+        const roomData = roomSnap.val();
+        const hasPlayers = roomData.players && Object.keys(roomData.players).length > 0;
+        const hasSpectators = roomData.spectators && Object.keys(roomData.spectators).length > 0;
+        if (!hasPlayers && !hasSpectators) {
+          await remove(ref(db, `rooms/${roomId}`));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to clean up room on leave:', err);
     }
 
     audio.stopBgm();
