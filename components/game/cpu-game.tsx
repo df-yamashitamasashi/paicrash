@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import { useCpuGame } from '@/hooks/use-cpu-game';
 import { GameBoardComponent } from './game-board';
 import { GameStats } from './game-stats';
-import { GameControls } from './game-controls';
+import { GameControls, GameActionButtons } from './game-controls';
 import { YakuGuide } from './yaku-guide';
 import { HistoryDialog } from './history-dialog';
 import { Button } from '@/components/ui/button';
@@ -318,7 +318,23 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
       </div>
 
       {/* Mobile layout - fixed viewport */}
-      <div className="flex md:hidden flex-col h-[100dvh] overflow-hidden">
+      <div className="flex md:hidden flex-col h-[calc(100dvh-2rem)] pt-14 overflow-hidden">
+        {/* Mobile Header with Actions */}
+        <div className="flex items-center justify-between px-3 py-2 bg-card/50 border-b border-border shrink-0">
+          <h1 className="text-sm font-bold text-primary">CPU戦</h1>
+          <div className="flex items-center gap-2">
+            <GameActionButtons
+              onPause={togglePause}
+              onReset={startMatch}
+              onShowGuide={() => setShowGuide(true)}
+              onShowHistory={() => setShowHistory(!showHistory)}
+              isPaused={isPaused}
+              isGameOver={isGameOver}
+              size="sm"
+            />
+          </div>
+        </div>
+
         {/* Compact stats bar */}
         <div className="flex items-center justify-between px-2 py-1 bg-card/50 border-b border-border shrink-0">
           <div className="text-center w-1/3">
@@ -443,6 +459,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
             isPaused={isPaused}
             isGameOver={isGameOver}
             isMobile
+            hideMobileActions
           />
         </div>
       </div>

@@ -5,7 +5,7 @@ import { useMultiplayer } from '@/hooks/use-multiplayer';
 import { useYakumanAnimation } from '@/hooks/use-yakuman-animation';
 import { GameBoardComponent } from './game-board';
 import { GameStats } from './game-stats';
-import { GameControls } from './game-controls';
+import { GameControls, GameActionButtons } from './game-controls';
 import { YakuGuide } from './yaku-guide';
 import { HistoryDialog } from './history-dialog';
 import { Button } from '@/components/ui/button';
@@ -425,7 +425,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
       </div>
 
       {/* Mobile layout - fixed viewport */}
-      <div className="flex md:hidden flex-col h-[100dvh] overflow-hidden w-full relative bg-background">
+      <div className="flex md:hidden flex-col h-[calc(100dvh-2rem)] pt-14 overflow-hidden w-full relative bg-background">
         {!isServerConnected && (
           <div className="bg-destructive/90 text-destructive-foreground text-xs p-1 text-center shrink-0">
             通信不安定
@@ -454,6 +454,19 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
             <span className="text-sm font-bold text-accent leading-tight">
               {(opponentState?.score ?? 0).toLocaleString()}
             </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <GameActionButtons
+              onPause={() => {}}
+              onReset={() => {}}
+              onShowGuide={() => setShowGuide(true)}
+              onShowHistory={() => setShowHistory(!showHistory)}
+              isPaused={false}
+              isGameOver={myState.isGameOver}
+              hidePause={true}
+              hideReset={true}
+              size="sm"
+            />
           </div>
         </div>
 
@@ -545,6 +558,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
             hidePause
             hideReset
             isMobile
+            hideMobileActions
           />
         </div>
       </div>

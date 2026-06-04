@@ -6,7 +6,7 @@ import { getTileDisplay } from '@/lib/mahjong-types';
 import type { MahjongTile } from '@/lib/mahjong-types';
 import { GameBoardComponent } from './game-board';
 import { GameStats } from './game-stats';
-import { GameControls } from './game-controls';
+import { GameControls, GameActionButtons } from './game-controls';
 import { YakuGuide } from './yaku-guide';
 import { HistoryDialog } from './history-dialog';
 import { Button } from '@/components/ui/button';
@@ -220,13 +220,22 @@ export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) 
       </div>
       
       {/* Mobile layout - fixed viewport */}
-      <div className="flex md:hidden flex-col h-[100dvh] overflow-hidden">
+      <div className="flex md:hidden flex-col h-[calc(100dvh-2rem)] pt-14 overflow-hidden">
         {/* Compact header */}
         <div className="flex items-center justify-between px-3 py-2 bg-card/50 border-b border-border shrink-0">
           <h1 className="text-lg font-bold text-primary">
             PaiCrash
           </h1>
-          <div className="flex items-center gap-2 mr-32">
+          <div className="flex items-center gap-2">
+            <GameActionButtons
+              onPause={togglePause}
+              onReset={reset}
+              onShowGuide={() => setShowGuide(true)}
+              onShowHistory={() => setShowHistory(!showHistory)}
+              isPaused={gameState.isPaused}
+              isGameOver={gameState.isGameOver}
+              size="sm"
+            />
             {onMultiplayerClick && (
               <Button variant="ghost" size="sm" onClick={onMultiplayerClick} className="h-8 px-2">
                 <Users className="h-4 w-4" />
@@ -306,6 +315,7 @@ export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) 
             isPaused={gameState.isPaused}
             isGameOver={gameState.isGameOver}
             isMobile
+            hideMobileActions
           />
         </div>
       </div>

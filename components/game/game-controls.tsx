@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, ArrowDown, ChevronsDown, Pause, Play, RotateCcw, HelpCircle, History } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface GameControlsProps {
   onMove: (direction: 'left' | 'right') => void;
@@ -16,6 +17,85 @@ interface GameControlsProps {
   isMobile?: boolean;
   hidePause?: boolean;
   hideReset?: boolean;
+  hideMobileActions?: boolean;
+}
+
+export function GameActionButtons({
+  onPause,
+  onReset,
+  onShowGuide,
+  onShowHistory,
+  isPaused,
+  isGameOver,
+  hidePause = false,
+  hideReset = false,
+  className,
+  size = 'icon',
+}: {
+  onPause: () => void;
+  onReset: () => void;
+  onShowGuide: () => void;
+  onShowHistory?: () => void;
+  isPaused: boolean;
+  isGameOver: boolean;
+  hidePause?: boolean;
+  hideReset?: boolean;
+  className?: string;
+  size?: 'sm' | 'icon';
+}) {
+  const btnClass = cn(
+    "shrink-0 rounded-full bg-card/80 backdrop-blur-sm",
+    size === 'icon' ? "h-10 w-10" : "h-8 w-8 px-0"
+  );
+  const iconClass = size === 'icon' ? "h-4 w-4" : "h-3.5 w-3.5";
+
+  return (
+    <div className={cn("flex gap-2 justify-center", className)}>
+      {onShowHistory && (
+        <Button
+          variant="outline"
+          size={size}
+          onClick={onShowHistory}
+          className={btnClass}
+          title="履歴"
+        >
+          <History className={iconClass} />
+        </Button>
+      )}
+      {!hidePause && (
+        <Button
+          variant="outline"
+          size={size}
+          onClick={onPause}
+          disabled={isGameOver}
+          className={btnClass}
+          title="一時停止"
+        >
+          {isPaused ? <Play className={iconClass} /> : <Pause className={iconClass} />}
+        </Button>
+      )}
+      {!hideReset && (
+        <Button
+          variant="outline"
+          size={size}
+          onClick={onReset}
+          className={btnClass}
+          title="リセット"
+        >
+          <RotateCcw className={iconClass} />
+        </Button>
+      )}
+      <Button
+        variant="outline"
+        size={size}
+        onClick={onShowGuide}
+        className={btnClass}
+        title="ヘルプ"
+      >
+        <HelpCircle className={iconClass} />
+      </Button>
+    </div>
+  );
 }
 
 export function GameControls({
@@ -31,53 +111,26 @@ export function GameControls({
   isMobile = false,
   hidePause = false,
   hideReset = false,
+  hideMobileActions = false,
 }: GameControlsProps) {
   if (isMobile) {
     return (
       <div className="flex flex-col gap-3 pb-2">
         {/* Action bar */}
-        <div className="flex gap-2 justify-end">
-          {onShowHistory && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={onShowHistory}
-              className="h-10 w-10 shrink-0 rounded-full bg-card/80 backdrop-blur-sm"
-              title="履歴"
-            >
-              <History className="h-4 w-4" />
-            </Button>
-          )}
-          {!hidePause && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={onPause}
-              disabled={isGameOver}
-              className="h-10 w-10 shrink-0 rounded-full bg-card/80 backdrop-blur-sm"
-            >
-              {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-            </Button>
-          )}
-          {!hideReset && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={onReset}
-              className="h-10 w-10 shrink-0 rounded-full bg-card/80 backdrop-blur-sm"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onShowGuide}
-            className="h-10 w-10 shrink-0 rounded-full bg-card/80 backdrop-blur-sm"
-          >
-            <HelpCircle className="h-4 w-4" />
-          </Button>
-        </div>
+        {!hideMobileActions && (
+          <div className="flex justify-end">
+            <GameActionButtons
+              onPause={onPause}
+              onReset={onReset}
+              onShowGuide={onShowGuide}
+              onShowHistory={onShowHistory}
+              isPaused={isPaused}
+              isGameOver={isGameOver}
+              hidePause={hidePause}
+              hideReset={hideReset}
+            />
+          </div>
+        )}
 
         {/* Hard Drop Row */}
         <div className="flex px-4">
@@ -122,37 +175,16 @@ export function GameControls({
   return (
     <div className="flex flex-col gap-4">
       {/* Action buttons */}
-      <div className="flex gap-2 justify-center">
-        {!hidePause && (
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onPause}
-          disabled={isGameOver}
-          className="h-10 w-10"
-        >
-          {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-        </Button>
-        )}
-        {!hideReset && (
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onReset}
-          className="h-10 w-10"
-        >
-          <RotateCcw className="h-4 w-4" />
-        </Button>
-        )}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onShowGuide}
-          className="h-10 w-10"
-        >
-          <HelpCircle className="h-4 w-4" />
-        </Button>
-      </div>
+      <GameActionButtons
+        onPause={onPause}
+        onReset={onReset}
+        onShowGuide={onShowGuide}
+        onShowHistory={onShowHistory}
+        isPaused={isPaused}
+        isGameOver={isGameOver}
+        hidePause={hidePause}
+        hideReset={hideReset}
+      />
       
       {/* Keyboard hints (desktop) */}
       <div className="text-center text-xs text-muted-foreground space-y-1">
