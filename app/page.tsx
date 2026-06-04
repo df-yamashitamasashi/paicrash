@@ -68,9 +68,11 @@ export default function MahjongPuzzleGame() {
   }, [gameMode, stopBgm]);
 
   const handleMultiplayerGameEnd = useCallback((payload: { 
+    winnerId: string;
     winnerName: string; 
     isPlayerWin: boolean; 
     isSpectator?: boolean;
+    playerName: string;
     playerScore: number;
     opponentScore: number;
     opponentName: string;
@@ -82,6 +84,7 @@ export default function MahjongPuzzleGame() {
       winnerName: payload.winnerName,
       isPlayerWin: payload.isPlayerWin,
       isSpectator: payload.isSpectator ?? false,
+      playerName: payload.playerName,
       playerScore: payload.playerScore,
       opponentScore: payload.opponentScore,
       opponentName: payload.opponentName,
@@ -104,6 +107,7 @@ export default function MahjongPuzzleGame() {
       winnerName: payload.winnerName,
       isPlayerWin: payload.isPlayerWin,
       isSpectator: false,
+      playerName: 'あなた',
       playerScore: payload.playerScore,
       opponentScore: payload.opponentScore,
       opponentName: payload.opponentName,
@@ -374,6 +378,9 @@ export default function MahjongPuzzleGame() {
               onClick={() => {
                 playClick();
                 stopBgm();
+                setGameResult(null);
+                setIsResultMinimized(false);
+                useMultiplayerStore.getState().setLastGameOver(null);
                 if (showMultiplayerMatch) {
                   leaveRoom();
                 }

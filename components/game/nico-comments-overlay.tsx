@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useMultiplayerStore } from '@/lib/multiplayer-store';
 import type { ChatMessagePayload } from '@/lib/multiplayer-protocol';
 import { cn } from '@/lib/utils';
@@ -14,6 +15,11 @@ interface ActiveComment extends ChatMessagePayload {
 export function NicoCommentsOverlay() {
   const messages = useMultiplayerStore((state) => state.messages);
   const [activeComments, setActiveComments] = useState<ActiveComment[]>([]);
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   // マウントした時刻以降のメッセージのみをアニメーションさせる
   const lastProcessedTime = useRef<number>(Date.now());
@@ -47,10 +53,10 @@ export function NicoCommentsOverlay() {
     }
   }, [messages]);
 
-  if (activeComments.length === 0) return null;
+  if (!mounted || activeComments.length === 0) return null;
 
-  return (
-    <div className="pointer-events-none fixed inset-0 z-[9999] overflow-hidden">
+  return createPortal(
+    <div className="pointer-events-none fixed inset-0 z-[99999] overflow-hidden">
       {activeComments.map((comment) => (
         <div
           key={comment.id}
@@ -66,6 +72,7 @@ export function NicoCommentsOverlay() {
           {comment.text}
         </div>
       ))}
-    </div>
+    </div>,
+    document.body
   );
 }
