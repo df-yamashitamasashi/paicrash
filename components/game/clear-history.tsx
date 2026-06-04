@@ -119,7 +119,7 @@ export function HistoryRow({ result, onHoverItem }: { result: ClearResult, onHov
       </div>
 
       {/* Tile list */}
-      <div className="flex flex-wrap gap-0.5">
+      <div className="flex flex-wrap gap-1 mt-1">
         {result.tiles
           .slice()
           .sort((a, b) => {

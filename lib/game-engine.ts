@@ -306,8 +306,12 @@ function detectYaku(clearedTiles: MahjongTile[], board: GameBoard, history: Clea
       allGroups.some(g => g.length >= 3 && g[0].suit === 'honor' && g[0].honor === d)
     );
     if (hasAllDragons) {
+      // Collect all dragon triplets from history and current
+      const fullTiles = allGroups.filter(g => 
+        g.length >= 3 && g[0].suit === 'honor' && dragons.includes(g[0].honor!)
+      ).flat();
       const def = YAKU_DEFINITIONS.find(y => y.name === 'Big Three Dragons')!;
-      return createYaku(def, clearedTiles);
+      return createYaku(def, fullTiles);
     }
   }
 
@@ -318,8 +322,11 @@ function detectYaku(clearedTiles: MahjongTile[], board: GameBoard, history: Clea
       allGroups.some(g => g.length >= 3 && g[0].suit === 'honor' && g[0].honor === w)
     );
     if (hasAllWinds) {
+      const fullTiles = allGroups.filter(g =>
+        g.length >= 3 && g[0].suit === 'honor' && winds.includes(g[0].honor!)
+      ).flat();
       const def = YAKU_DEFINITIONS.find(y => y.name === 'Four Winds')!;
-      return createYaku(def, clearedTiles);
+      return createYaku(def, fullTiles);
     }
   }
 
@@ -343,8 +350,10 @@ function detectYaku(clearedTiles: MahjongTile[], board: GameBoard, history: Clea
       }
     }
     if (hasAll) {
+      // Collect all tiles of the suit to form the straight
+      const fullTiles = allGroups.filter(g => g.some(t => t.suit === suit && t.number !== undefined)).flat();
       const def = YAKU_DEFINITIONS.find(y => y.name === 'Pure Straight')!;
-      return createYaku(def, clearedTiles);
+      return createYaku(def, fullTiles);
     }
   }
 
@@ -371,8 +380,9 @@ function detectYaku(clearedTiles: MahjongTile[], board: GameBoard, history: Clea
     }
     
     if (isNineGates) {
+      const fullTiles = allGroups.filter(g => g.some(t => t.suit === suit)).flat();
       const def = YAKU_DEFINITIONS.find(y => y.name === 'Nine Gates')!;
-      return createYaku(def, clearedTiles);
+      return createYaku(def, fullTiles);
     }
   }
 
@@ -403,8 +413,10 @@ function detectYaku(clearedTiles: MahjongTile[], board: GameBoard, history: Clea
     (clearedTiles[0].number === 1 || clearedTiles[0].number === 9)
   )) {
     // Return Thirteen Orphans only when the triggering clear is a terminal/honor
+    // Collect all terminals and honors from history
+    const fullTiles = allGroups.filter(g => g.some(t => t.suit === 'honor' || t.number === 1 || t.number === 9)).flat();
     const def = YAKU_DEFINITIONS.find(y => y.name === 'Thirteen Orphans')!;
-    return createYaku(def, clearedTiles);
+    return createYaku(def, fullTiles);
   }
 
   // Check for dragon triplet
@@ -900,19 +912,49 @@ export function clearTiles(
 
   for (const group of groups) {
     const yaku = detectYaku(group, board, currentHistory);
-    const baseScore = yaku ? yaku.han * 100 : 100;
-    const doraBonus = group.reduce((sum, tile) => {
-      let bonus = 0;
-      if (isDora(tile, doraIndicator)) bonus += 50;
-      if (isUraDora(tile, uraDoraIndicator)) bonus += 100;
-      return sum + bonus;
+    
+    // Mahjong-based score calculation
+    const han = yaku ? yaku.han : 1; // Default to 1 han for any basic clear
+    
+    const doraCount = group.reduce((count, tile) => {
+      let c = 0;
+      if (isDora(tile, doraIndicator)) c++;
+      if (isUraDora(tile, uraDoraIndicator)) c++;
+      return count + c;
     }, 0);
-    const chainMultiplier = Math.pow(2, chainCount);
+    
+    const totalHan = han + doraCount;
+    let baseScore = 0;
+    
+    // Determine base score by Han (like standard Mahjong points, roughly)
+    if (totalHan >= 13) {
+      baseScore = 32000; // Yakuman
+    } else if (totalHan >= 11) {
+      baseScore = 24000; // Sanbaiman
+    } else if (totalHan >= 8) {
+      baseScore = 16000; // Baiman
+    } else if (totalHan >= 6) {
+      baseScore = 12000; // Haneman
+    } else if (totalHan >= 4) {
+      baseScore = 8000;  // Mangan
+    } else {
+      // 1-3 han calculation (approximated child score, 30 fu)
+      if (totalHan === 1) baseScore = 1000;
+      else if (totalHan === 2) baseScore = 2000;
+      else if (totalHan === 3) baseScore = 3900;
+      else baseScore = 1000;
+    }
+
+    // Chain multiplier logic:
+    // Base Mahjong scores are large enough, so we use (chainCount + 1) multiplier
+    // to keep it somewhat sane but still rewarding chains.
+    const chainMultiplier = chainCount + 1;
+    const finalScore = baseScore * chainMultiplier;
 
     const result = {
-      tiles: group,
+      tiles: yaku ? yaku.tiles : group, // Use full yaku tiles if available, otherwise just the cleared group
       yaku,
-      score: (baseScore + doraBonus) * chainMultiplier,
+      score: finalScore,
       isChain: chainCount > 0,
       chainCount,
       timestamp: now,
