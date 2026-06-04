@@ -110,11 +110,11 @@
 ### 2026-06-04 — スマホ画面で履歴を確認できない問題の解消
 
 - **担当**: AI エージェント
-- **概要**: モバイルのコンパクト画面で省略されていた消去履歴（clearHistory）を確認できるよう、共通の引き出し式UI（Bottom Sheet Drawer）である `HistoryDialog` を実装。さらに、ボトムシート表示時にゲーム盤面がシートの裏に隠れるのを防ぐため、履歴を開いた際にゲーム盤面コンテナに自動的に `pb-[30dvh]` のパディングを加え、盤面全体を画面上部にスムーズにシフトさせるアニメーション（transition-all）を実装。これにより、画面の狭いスマートフォンでも消去した牌のハイライト位置が完全に確認できるようになりました。
+- **概要**: モバイルのコンパクト画面で省略されていた消去履歴（clearHistory）を確認できるよう、共通の引き出し式UI（Bottom Sheet Drawer）である `HistoryDialog` を実装。さらに、ボトムシート表示時にゲーム盤面がシートの裏に隠れるのを防ぐため、履歴を開いた際にゲーム盤面コンテナに自動的に `pb-[30dvh]` のパディングを加え、盤面全体を画面上部にスムーズにシフトさせるアニメーション（transition-all）を実装。また、成立数が多くなると `30vh` の高さでは履歴が見切れてしまうため、右上の拡大/縮小ボタンでシート高さを `30vh`（最小化して盤面が見える状態）と `80vh`（最大化して履歴をじっくりスクロール確認できる状態）でトグル切り替えできる拡張機構を追加。
 - **変更ファイル**:
   - `components/ui/drawer.tsx` (DrawerContentにカスタムの背景色調整用 `overlayClassName` プロップスを追加)
   - `components/game/clear-history.tsx` (タップによる牌ハイライトのために `onClick` イベントを追加、関数・Rowコンポーネントをexport)
-  - `components/game/history-dialog.tsx` (非モーダル化 `modal={false}` の設定、最大高さの `max-h-[30vh]` への削減、閉じるボタンの追加)
+  - `components/game/history-dialog.tsx` (非モーダル化 `modal={false}` の設定、高さのトグル切り替え機能 `isExpanded` (30vh⇔80vh) の実装、拡大/縮小ボタンおよび閉じるボタンの追加)
   - `components/game/game-controls.tsx` (モバイルコントロールに履歴ボタン追加)
   - `components/game/single-player.tsx` (履歴表示時にゲーム盤面を上方にシフトさせる padding アニメーションの追加)
   - `components/game/cpu-game.tsx` (履歴表示時にゲーム盤面を上方にシフトさせる padding アニメーションの追加)
