@@ -199,10 +199,10 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
 
       if (isSpectator && matchSnapshot?.players.length === 2) {
         pScore = matchSnapshot.players[0].gameState.score;
-        pHistory = matchSnapshot.players[0].gameState.clearHistory;
+        pHistory = matchSnapshot.players[0].gameState.clearHistory ?? [];
         oScore = matchSnapshot.players[1].gameState.score;
         oName = matchSnapshot.players[1].playerName;
-        oHistory = matchSnapshot.players[1].gameState.clearHistory;
+        oHistory = matchSnapshot.players[1].gameState.clearHistory ?? [];
       } else {
         pScore = mySnapshot?.gameState.score ?? 0;
         oScore = opponentSnapshot?.gameState.score ?? 0;

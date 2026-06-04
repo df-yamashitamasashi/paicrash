@@ -44,7 +44,8 @@ function getScoreRank(score: number): { label: string; color: string } {
   return { label: '初心', color: 'text-muted-foreground' };
 }
 
-function buildBreakdown(history: ClearResult[]): ScoreBreakdown[] {
+function buildBreakdown(history: ClearResult[] = []): ScoreBreakdown[] {
+  if (!history || !Array.isArray(history)) return [];
   const items: ScoreBreakdown[] = [];
 
   // Count yakuman
@@ -358,11 +359,11 @@ export function GameResultDialog({
             <div className="grid grid-cols-2 gap-3 mt-3 text-center">
               <div className="bg-muted/20 rounded-lg py-2 px-3">
                 <p className="text-[10px] text-muted-foreground">消去回数</p>
-                <p className="text-lg font-bold tabular-nums">{result.playerHistory.length}</p>
+                <p className="text-lg font-bold tabular-nums">{result.playerHistory?.length ?? 0}</p>
               </div>
               <div className="bg-muted/20 rounded-lg py-2 px-3">
                 <p className="text-[10px] text-muted-foreground">消去回数</p>
-                <p className="text-lg font-bold tabular-nums">{result.opponentHistory.length}</p>
+                <p className="text-lg font-bold tabular-nums">{result.opponentHistory?.length ?? 0}</p>
               </div>
             </div>
           </div>
