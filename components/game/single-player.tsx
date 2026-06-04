@@ -104,6 +104,61 @@ export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
+
+  // Touch handling refs
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const touchLastX = useRef<number | null>(null);
+  const touchStartTime = useRef<number>(0);
+  const lastDropTime = useRef<number>(0);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (gameState.isGameOver || gameState.isPaused) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    touchLastX.current = e.touches[0].clientX;
+    touchStartTime.current = Date.now();
+  }, [gameState.isGameOver, gameState.isPaused]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (gameState.isGameOver || gameState.isPaused) return;
+    if (touchStartX.current === null || touchLastX.current === null || touchStartY.current === null) return;
+    
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const deltaX = currentX - touchLastX.current;
+    
+    const cellWidth = 32;
+    const now = Date.now();
+
+    if (Math.abs(deltaX) >= cellWidth * 0.8) {
+      if (deltaX > 0) moveTile('right');
+      else moveTile('left');
+      touchLastX.current = currentX;
+    }
+    
+    if (currentY - touchStartY.current > cellWidth * 1.5 && now - lastDropTime.current > 150) {
+      dropTile();
+      touchStartY.current = currentY;
+      lastDropTime.current = now;
+    }
+  }, [gameState.isGameOver, gameState.isPaused, moveTile, dropTile]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (gameState.isGameOver || gameState.isPaused) return;
+    if (touchStartY.current !== null && touchStartX.current !== null) {
+      const currentY = e.changedTouches[0].clientY;
+      const deltaY = currentY - touchStartY.current;
+      const deltaTime = Date.now() - touchStartTime.current;
+      
+      if (deltaY > 50 && (deltaY / deltaTime) > 0.8) {
+        hardDrop();
+      }
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+    touchLastX.current = null;
+  }, [gameState.isGameOver, gameState.isPaused, hardDrop]);
   
   return (
     <>
@@ -221,7 +276,13 @@ export function SinglePlayerGame({ onMultiplayerClick }: SinglePlayerGameProps) 
         )}
         
         {/* Game board - fills remaining space */}
-        <div className={`flex-1 flex items-center justify-center p-2 min-h-0 min-w-0 overflow-hidden transition-all duration-300 ${showHistory ? 'pb-[30dvh]' : ''}`}>
+        <div 
+          className={`flex-1 flex items-center justify-center p-2 min-h-0 min-w-0 overflow-hidden touch-none transition-all duration-300 ${showHistory ? 'pb-[30dvh]' : ''}`}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+        >
           <GameBoardComponent
             board={gameState.board}
             currentTile={gameState.currentTile}

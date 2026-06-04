@@ -103,6 +103,61 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  // Touch handling refs
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const touchLastX = useRef<number | null>(null);
+  const touchStartTime = useRef<number>(0);
+  const lastDropTime = useRef<number>(0);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (isGameOver || isPaused || countdown !== null) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    touchLastX.current = e.touches[0].clientX;
+    touchStartTime.current = Date.now();
+  }, [isGameOver, isPaused, countdown]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (isGameOver || isPaused || countdown !== null) return;
+    if (touchStartX.current === null || touchLastX.current === null || touchStartY.current === null) return;
+    
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const deltaX = currentX - touchLastX.current;
+    
+    const cellWidth = 32;
+    const now = Date.now();
+
+    if (Math.abs(deltaX) >= cellWidth * 0.8) {
+      if (deltaX > 0) sendPlayerInput('move-right');
+      else sendPlayerInput('move-left');
+      touchLastX.current = currentX;
+    }
+    
+    if (currentY - touchStartY.current > cellWidth * 1.5 && now - lastDropTime.current > 150) {
+      sendPlayerInput('soft-drop');
+      touchStartY.current = currentY;
+      lastDropTime.current = now;
+    }
+  }, [isGameOver, isPaused, countdown, sendPlayerInput]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (isGameOver || isPaused || countdown !== null) return;
+    if (touchStartY.current !== null && touchStartX.current !== null) {
+      const currentY = e.changedTouches[0].clientY;
+      const deltaY = currentY - touchStartY.current;
+      const deltaTime = Date.now() - touchStartTime.current;
+      
+      if (deltaY > 50 && (deltaY / deltaTime) > 0.8) {
+        sendPlayerInput('hard-drop');
+      }
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+    touchLastX.current = null;
+  }, [isGameOver, isPaused, countdown, sendPlayerInput]);
+
   useEffect(() => {
     if (!isGameOver || !winner) {
       gameEndedCalledRef.current = false;
@@ -153,7 +208,13 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
         </div>
 
         <div className="flex flex-row gap-4 lg:gap-8 items-start w-full max-w-full justify-center">
-          <div className="flex flex-col items-center gap-4">
+          <div 
+            className="flex flex-col items-center gap-4 touch-none"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
+          >
             <GameBoardComponent
               board={playerAnimBoard || playerState.board}
               currentTile={playerAnimBoard ? null : playerState.currentTile}
@@ -303,7 +364,13 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
         {/* Game Area - fills remaining space */}
         <div className={`flex-1 flex flex-row items-center justify-center gap-1 min-h-0 px-1 py-2 transition-all duration-300 ${showHistory ? 'pb-[30dvh]' : ''}`}>
           {/* Player Main Board */}
-          <div className="flex-1 flex justify-center items-center h-full min-h-0 min-w-0 overflow-hidden">
+          <div 
+            className="flex-1 flex justify-center items-center h-full min-h-0 min-w-0 overflow-hidden touch-none"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
+          >
             <GameBoardComponent
               board={playerState.board}
               currentTile={playerState.currentTile}
