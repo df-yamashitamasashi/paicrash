@@ -110,15 +110,15 @@
 ### 2026-06-04 — スマホ画面で履歴を確認できない問題の解消
 
 - **担当**: AI エージェント
-- **概要**: モバイルのコンパクト画面で省略されていた消去履歴（clearHistory）を確認できるよう、共通の引き出し式UI（Bottom Sheet Drawer）である `HistoryDialog` を実装。これにより履歴閲覧中も画面上部のゲーム盤面が隠れず見えたままになり、履歴行をタップした際の該当牌のハイライト位置がひと目でわかります。
+- **概要**: モバイルのコンパクト画面で省略されていた消去履歴（clearHistory）を確認できるよう、共通の引き出し式UI（Bottom Sheet Drawer）である `HistoryDialog` を実装。さらに、ボトムシート表示時にゲーム盤面がシートの裏に隠れるのを防ぐため、履歴を開いた際にゲーム盤面コンテナに自動的に `pb-[30dvh]` のパディングを加え、盤面全体を画面上部にスムーズにシフトさせるアニメーション（transition-all）を実装。これにより、画面の狭いスマートフォンでも消去した牌のハイライト位置が完全に確認できるようになりました。
 - **変更ファイル**:
   - `components/ui/drawer.tsx` (DrawerContentにカスタムの背景色調整用 `overlayClassName` プロップスを追加)
   - `components/game/clear-history.tsx` (タップによる牌ハイライトのために `onClick` イベントを追加、関数・Rowコンポーネントをexport)
-  - `components/game/history-dialog.tsx` (ダイアログUIから画面下部からスライドするDrawer UIへ変更し、背景を極限まで薄い `bg-black/10` に設定)
+  - `components/game/history-dialog.tsx` (非モーダル化 `modal={false}` の設定、最大高さの `max-h-[30vh]` への削減、閉じるボタンの追加)
   - `components/game/game-controls.tsx` (モバイルコントロールに履歴ボタン追加)
-  - `components/game/single-player.tsx` (モバイル版に履歴ダイアログの組み込み)
-  - `components/game/cpu-game.tsx` (モバイル版に履歴ダイアログの組み込み)
-  - `components/game/multiplayer-game.tsx` (モバイル版に履歴ダイアログの組み込み)
+  - `components/game/single-player.tsx` (履歴表示時にゲーム盤面を上方にシフトさせる padding アニメーションの追加)
+  - `components/game/cpu-game.tsx` (履歴表示時にゲーム盤面を上方にシフトさせる padding アニメーションの追加)
+  - `components/game/multiplayer-game.tsx` (履歴表示時にゲーム盤面を上方にシフトさせる padding アニメーションの追加)
 - **セルフレビュー**: 1 pass, 3 pass, 6 pass, 10 pass, 11 pass, 12 pass
 - **次のアクション**: バックログのタスク消化
 

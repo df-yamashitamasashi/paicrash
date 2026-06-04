@@ -443,7 +443,7 @@ export function MultiplayerGame({ onGameEnd }: MultiplayerGameProps) {
         </div>
 
         {/* Game boards area */}
-        <div className="flex-1 flex flex-row items-stretch justify-center p-2 min-h-0 gap-2 w-full max-w-full">
+        <div className={`flex-1 flex flex-row items-stretch justify-center p-2 min-h-0 gap-2 w-full max-w-full transition-all duration-300 ${showHistory ? 'pb-[30dvh]' : ''}`}>
           <div 
             className="flex-1 flex items-center justify-center min-w-0 touch-none"
             onTouchStart={handleTouchStart}

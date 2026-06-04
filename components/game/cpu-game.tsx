@@ -287,7 +287,7 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
         </div>
 
         {/* Game Area - fills remaining space */}
-        <div className="flex-1 flex flex-row items-center justify-center gap-1 min-h-0 px-1 py-2">
+        <div className={`flex-1 flex flex-row items-center justify-center gap-1 min-h-0 px-1 py-2 transition-all duration-300 ${showHistory ? 'pb-[30dvh]' : ''}`}>
           {/* Player Main Board */}
           <div className="flex-1 flex justify-end items-center h-full max-h-full">
             <div className="scale-[0.95] sm:scale-100 origin-right">
