@@ -200,7 +200,7 @@ export function GameResultDialog({
     <Dialog open={!!result && !isMinimized} onOpenChange={(open) => {
       if (!open) onMinimize();
     }}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-2 border-primary/30">
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-2 border-primary/30 max-h-[95vh] flex flex-col">
         {/* Top Banner */}
         <div className={cn(
           "relative px-6 py-5 text-center overflow-hidden",
@@ -258,7 +258,7 @@ export function GameResultDialog({
         </div>
 
         {/* Score Section */}
-        <div className="px-6 py-4 space-y-4">
+        <div className="px-6 py-4 space-y-4 overflow-y-auto flex-1">
           {/* Score Comparison */}
           <div className={cn(
             "transition-all duration-700 ease-out",
