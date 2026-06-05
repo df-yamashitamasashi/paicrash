@@ -11,10 +11,10 @@ export function RecruitBanner({ className }: RecruitBannerProps) {
       href="https://diamond-f.co.jp/recruit/" 
       target="_blank" 
       rel="noopener noreferrer"
-      className={cn("block w-full relative group cursor-pointer", className)}
+      className={cn("block w-full min-w-0 relative group cursor-pointer", className)}
     >
       <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-300 via-cyan-300 to-indigo-300 rounded-xl blur-[2px] opacity-70 transition duration-500 group-hover:opacity-100"></div>
-      <div className="relative bg-white/90 dark:bg-card/90 backdrop-blur-sm border border-cyan-200/50 rounded-xl p-3 flex flex-row items-center justify-between h-[80px] sm:h-[90px] shadow-sm overflow-hidden transition-colors hover:bg-white dark:hover:bg-card/95">
+      <div className="relative w-full min-w-0 bg-white/90 dark:bg-card/90 backdrop-blur-sm border border-cyan-200/50 rounded-xl p-3 flex flex-row items-center justify-between h-[80px] sm:h-[90px] shadow-sm overflow-hidden transition-colors hover:bg-white dark:hover:bg-card/95">
         <div className="absolute top-1.5 right-2.5 text-[9px] text-muted-foreground/50 uppercase tracking-widest font-semibold">Sponsor</div>
         
         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">

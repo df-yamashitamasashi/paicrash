@@ -286,7 +286,7 @@ export function MultiplayerLobby({ onBack }: MultiplayerLobbyProps) {
         </Card>
 
         {/* Banner Ad Space Placeholder */}
-        <div className="w-full mt-2">
+        <div className="w-full min-w-0 mt-2">
           <AdBanner />
         </div>
 
@@ -437,7 +437,7 @@ export function MultiplayerLobby({ onBack }: MultiplayerLobbyProps) {
       </Dialog>
 
       {/* Banner Ad Space Placeholder */}
-      <div className="w-full mt-4">
+      <div className="w-full min-w-0 mt-4">
         <AdBanner />
       </div>
 

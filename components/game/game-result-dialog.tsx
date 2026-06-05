@@ -372,7 +372,7 @@ export function GameResultDialog({
             revealPhase >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
             {/* Banner Ad Space Placeholder */}
-            <div className="w-full mb-1">
+            <div className="w-full min-w-0 mb-1">
               <AdBanner />
             </div>
 

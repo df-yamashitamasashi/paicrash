@@ -8,7 +8,7 @@ interface AdBannerProps {
 
 export function AdBanner({ className }: AdBannerProps) {
   return (
-    <div className={cn("flex flex-col gap-2 w-full", className)}>
+    <div className={cn("flex flex-col gap-2 w-full min-w-0", className)}>
       <PromoBanner />
       <RecruitBanner />
     </div>

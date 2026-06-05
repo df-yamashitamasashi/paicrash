@@ -326,7 +326,7 @@ export default function MahjongPuzzleGame() {
             </div>
 
             {/* Banner Ad Space Placeholder */}
-            <div className="w-full max-w-2xl mt-6">
+            <div className="w-full min-w-0 max-w-2xl mt-6">
               <AdBanner />
             </div>
 
