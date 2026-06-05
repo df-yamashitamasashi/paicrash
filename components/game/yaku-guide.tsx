@@ -40,9 +40,9 @@ export function YakuGuide({ open, onOpenChange }: YakuGuideProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] bg-card border-border flex flex-col">
         <DialogHeader className="shrink-0">
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <HelpIcon className="h-5 w-5 text-primary" />
-            遊び方
+          <DialogTitle className="flex items-center gap-2 text-xl text-green-700 dark:text-green-400">
+            <HelpIcon className="h-5 w-5" />
+            🔰 遊び方
           </DialogTitle>
         </DialogHeader>
         
@@ -52,7 +52,7 @@ export function YakuGuide({ open, onOpenChange }: YakuGuideProps) {
             <div className="p-4 bg-muted/50 rounded-lg border border-border">
               <h3 className="font-bold text-lg text-primary mb-3">基本的な遊び方</h3>
               <ul className="text-sm text-muted-foreground space-y-2">
-                <li>• <strong>入れ替え：</strong> 盤面の牌をスワイプ（またはドラッグ）して隣の牌と入れ替えます。</li>
+                <li>• <strong>移動：</strong> 落ちてくる牌を矢印またはスワイプで移動し、狙った場所に落とします。</li>
                 <li>• <strong>消去：</strong> 同じ牌を3つ以上、または連続する数字を3つ以上繋げると消えます。</li>
                 <li>• <strong>連鎖：</strong> 牌が消えて空いたスペースに上の牌が落ちてきます。連続して消えると連鎖ボーナス！</li>
                 <li>• <strong>役作り：</strong> 麻雀の役を作ると高得点！消した牌はストックされ、条件を満たすと役ボーナスが入ります。</li>
@@ -311,10 +311,10 @@ export function YakuGuideButton({ onClick }: { onClick: () => void }) {
       variant="outline"
       size="sm"
       onClick={onClick}
-      className="gap-2"
+      className="gap-2 border-green-500/50 text-green-700 dark:text-green-400 bg-green-50/50 hover:bg-green-100 dark:bg-green-950/20 dark:hover:bg-green-900/40"
     >
       <HelpIcon className="h-4 w-4" />
-      遊び方
+      🔰 遊び方
     </Button>
   );
 }

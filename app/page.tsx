@@ -17,7 +17,8 @@ import type { GameResultData } from '@/components/game/game-result-dialog';
 import { useMultiplayerStore } from '@/lib/multiplayer-store';
 import { useMultiplayer } from '@/hooks/use-multiplayer';
 import type { BattleReport } from '@/lib/multiplayer-protocol';
-import { Volume2, VolumeX, Settings, Maximize2 } from 'lucide-react';
+import { User, Settings, Info, Trophy, ExternalLink, Volume2, VolumeX, Maximize2 } from 'lucide-react';
+import { AdBanner } from '@/components/ui/ad-banner';
 import { TileLogoIcon, SinglePlayerIcon, MultiplayerIcon, GuideIcon } from '@/components/icons/mahjong';
 import { useAudio } from '@/hooks/use-audio';
 
@@ -167,6 +168,18 @@ export default function MahjongPuzzleGame() {
         >
           <Settings className="h-4 w-4 text-muted-foreground" />
         </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-full text-lg"
+          onClick={() => {
+            playClick();
+            setShowYakuGuide(true);
+          }}
+          title="遊び方"
+        >
+          🔰
+        </Button>
       </div>
 
       <div className="max-w-6xl mx-auto relative z-10">
@@ -281,38 +294,7 @@ export default function MahjongPuzzleGame() {
               </Card>
 
               <Card
-                className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg group md:col-span-1"
-                onClick={() => {
-                  playClick();
-                  setShowYakuGuide(true);
-                }}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 group-hover:text-primary transition-colors">
-                    <GuideIcon className="h-5 w-5" />
-                    遊び方
-                  </CardTitle>
-                  <CardDescription>
-                    遊び方と麻雀役の一覧を確認
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      playClick();
-                      setShowYakuGuide(true);
-                    }}
-                  >
-                    遊び方を見る
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card
-                className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg group md:col-span-1"
+                className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg group md:col-span-2"
                 onClick={() => {
                   playClick();
                   router.push('/tiles');
@@ -343,8 +325,14 @@ export default function MahjongPuzzleGame() {
               </Card>
             </div>
 
-            <footer className="w-full pt-8 text-center text-sm text-muted-foreground/60 font-medium">
-              &copy; {new Date().getFullYear()} PaiCrash. All rights reserved.
+            {/* Banner Ad Space Placeholder */}
+            <div className="w-full max-w-2xl mt-6">
+              <AdBanner />
+            </div>
+
+            <footer className="w-full pt-8 text-center text-sm text-muted-foreground/60 font-medium flex flex-col items-center gap-1">
+              <span>&copy; {new Date().getFullYear()} PaiCrash. All rights reserved.</span>
+              <span className="text-xs opacity-70">v0.7</span>
             </footer>
           </div>
         )}

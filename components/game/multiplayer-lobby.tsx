@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useMultiplayer } from '@/hooks/use-multiplayer';
 import { useMultiplayerStore } from '@/lib/multiplayer-store';
 import { cn } from '@/lib/utils';
+import { AdBanner } from '@/components/ui/ad-banner';
 import {
   ConnectIcon,
   LeaveIcon,
@@ -284,7 +285,10 @@ export function MultiplayerLobby({ onBack }: MultiplayerLobbyProps) {
           </CardContent>
         </Card>
 
-
+        {/* Banner Ad Space Placeholder */}
+        <div className="w-full mt-2">
+          <AdBanner />
+        </div>
 
         {isSpectator && currentRoom.isStarted && (
           <p className="text-center text-sm text-muted-foreground">
@@ -431,6 +435,11 @@ export function MultiplayerLobby({ onBack }: MultiplayerLobbyProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Banner Ad Space Placeholder */}
+      <div className="w-full mt-4">
+        <AdBanner />
+      </div>
 
       {error && <p className="text-destructive text-sm text-center">{error}</p>}
     </div>

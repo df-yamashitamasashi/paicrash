@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { AdBanner } from '@/components/ui/ad-banner';
 import { Trophy, Crown, Swords, Flame, Star, Zap } from 'lucide-react';
 import type { ClearResult } from '@/lib/mahjong-types';
 import { cn } from '@/lib/utils';
@@ -365,11 +366,16 @@ export function GameResultDialog({
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Action Buttons & Ad Space */}
           <div className={cn(
             "flex flex-col gap-3 pt-2 transition-all duration-700 ease-out",
             revealPhase >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
+            {/* Banner Ad Space Placeholder */}
+            <div className="w-full mb-1">
+              <AdBanner />
+            </div>
+
             <div className="flex gap-3 justify-center w-full">
               <Button onClick={onClose} className="flex-1 min-w-0 bg-yellow-200 hover:bg-yellow-300 text-yellow-950 font-bold border-none">
                 メニューに戻る
