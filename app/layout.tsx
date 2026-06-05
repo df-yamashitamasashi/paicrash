@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono, M_PLUS_Rounded_1c } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import { NextAuthProvider } from '@/components/providers'
 import './globals.css'
 
@@ -29,7 +28,6 @@ export default function RootLayout({
         <NextAuthProvider>
           {children}
         </NextAuthProvider>
-        {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
   )
