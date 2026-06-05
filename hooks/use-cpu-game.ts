@@ -237,11 +237,11 @@ export function useCpuGame() {
   useEffect(() => {
     if (!gameState.cpu || isGameOver || countdown !== null || isPaused) return;
     
-    let aiSpeed = 400;
-    if (cpuSpeed === 'slow') aiSpeed = 800;
-    else if (cpuSpeed === 'normal') aiSpeed = 400;
-    else if (cpuSpeed === 'fast') aiSpeed = 200;
-    else if (cpuSpeed === 'insane') aiSpeed = 100;
+    let aiSpeed = 600;
+    if (cpuSpeed === 'slow') aiSpeed = 1000;
+    else if (cpuSpeed === 'normal') aiSpeed = 600;
+    else if (cpuSpeed === 'fast') aiSpeed = 300;
+    else if (cpuSpeed === 'insane') aiSpeed = 150;
     
     const interval = setInterval(() => {
       if (isPlayerAnimatingRef.current) return; // Block CPU tick loop during player's Yakuman animation
@@ -269,13 +269,12 @@ export function useCpuGame() {
           currentCpuTileIdRef.current = tileId;
           targetX = nextCpu.currentTile.x;
           let bestScore = -Infinity;
+          const current = nextCpu.currentTile;
           
           for (let x = 0; x < nextCpu.board.width; x++) {
-            let topTile = null;
             let topY = nextCpu.board.height;
             for (let y = 0; y < nextCpu.board.height; y++) {
               if (nextCpu.board.tiles[y][x]) {
-                topTile = nextCpu.board.tiles[y][x];
                 topY = y;
                 break;
               }
@@ -285,38 +284,78 @@ export function useCpuGame() {
             
             let score = topY * 2; 
             
-            if (topTile) {
-              if (topTile.number === nextCpu.currentTile.number && topTile.honor === nextCpu.currentTile.honor) {
-                score += 100;
-              } else if (!topTile.honor && !nextCpu.currentTile.honor && topTile.suit === nextCpu.currentTile.suit) {
-                if (topTile.number != null && nextCpu.currentTile.number != null && Math.abs(topTile.number - nextCpu.currentTile.number) === 1) {
-                  score += 50; 
-                }
-              }
-            }
+            const bottomTile = topY < nextCpu.board.height ? nextCpu.board.tiles[topY][x] : null;
+            const leftTile = x > 0 && topY - 1 >= 0 ? nextCpu.board.tiles[topY - 1][x - 1] : null;
+            const rightTile = x < nextCpu.board.width - 1 && topY - 1 >= 0 ? nextCpu.board.tiles[topY - 1][x + 1] : null;
+            const bottomLeftTile = x > 0 && topY < nextCpu.board.height ? nextCpu.board.tiles[topY][x - 1] : null;
+            const bottomRightTile = x < nextCpu.board.width - 1 && topY < nextCpu.board.height ? nextCpu.board.tiles[topY][x + 1] : null;
             
-            if (x > 0) {
-              const leftTile = nextCpu.board.tiles[topY - 1]?.[x - 1];
-              if (leftTile) {
-                if (!leftTile.honor && !nextCpu.currentTile.honor && leftTile.suit === nextCpu.currentTile.suit) {
-                  if (leftTile.number != null && nextCpu.currentTile.number != null && Math.abs(leftTile.number - nextCpu.currentTile.number) === 1) {
-                    score += 25;
-                  }
-                  if (leftTile.number === nextCpu.currentTile.number && leftTile.honor === nextCpu.currentTile.honor) {
-                    score += 50;
-                  }
-                }
+            const isSameTile = (t1: any, t2: any) => {
+              if (!t1 || !t2) return false;
+              if (t1.honor || t2.honor) return t1.honor === t2.honor;
+              return t1.suit === t2.suit && t1.number === t2.number;
+            };
+            
+            const isSeqTile = (t1: any, t2: any, diff: number) => {
+              if (!t1 || !t2 || t1.honor || t2.honor || t1.suit !== t2.suit) return false;
+              return t1.number != null && t2.number != null && Math.abs(t1.number - t2.number) === diff;
+            };
+
+            const adjacents = [bottomTile, leftTile, rightTile, bottomLeftTile, bottomRightTile].filter(t => t != null);
+
+            let sameCount = 0;
+            const seq1Tiles: any[] = [];
+            const seq2Tiles: any[] = [];
+            
+            for (const adj of adjacents) {
+              if (isSameTile(adj, current)) {
+                score += 60;
+                sameCount++;
+              } else if (isSeqTile(adj, current, 1)) {
+                score += 40;
+                seq1Tiles.push(adj);
+              } else if (isSeqTile(adj, current, 2)) {
+                score += 20;
+                seq2Tiles.push(adj);
               }
             }
-            if (x < nextCpu.board.width - 1) {
-              const rightTile = nextCpu.board.tiles[topY - 1]?.[x + 1];
-              if (rightTile) {
-                if (!rightTile.honor && !nextCpu.currentTile.honor && rightTile.suit === nextCpu.currentTile.suit) {
-                  if (rightTile.number != null && nextCpu.currentTile.number != null && Math.abs(rightTile.number - nextCpu.currentTile.number) === 1) {
-                    score += 25;
+
+            if (sameCount >= 2) {
+              score += 800; // Complete Triplet in any direction
+            }
+
+            // Sequence of type: (current-1), current, (current+1) in any direction
+            if (seq1Tiles.length >= 2) {
+               const numbers = new Set(seq1Tiles.map(t => t.number));
+               if (numbers.size >= 2) score += 600;
+            }
+
+            // Sequence of type: (current-2), (current-1), current OR current, (current+1), (current+2) in any direction
+            if (seq1Tiles.length > 0 && seq2Tiles.length > 0) {
+              let seqFound = false;
+              for (const t1 of seq1Tiles) {
+                for (const t2 of seq2Tiles) {
+                  if (Math.abs(t1.number! - t2.number!) === 1) {
+                    score += 600;
+                    seqFound = true;
+                    break;
                   }
-                  if (rightTile.number === nextCpu.currentTile.number && rightTile.honor === nextCpu.currentTile.honor) {
-                    score += 50;
+                }
+                if (seqFound) break;
+              }
+            }
+
+            // Keep deep vertical check since dropping directly on top is easiest to set up
+            if (bottomTile) {
+              if (isSameTile(bottomTile, current)) {
+                score += 40; // extra weight for vertical stacking
+                const bottomBottomTile = topY + 1 < nextCpu.board.height ? nextCpu.board.tiles[topY + 1][x] : null;
+                if (bottomBottomTile && isSameTile(bottomBottomTile, current)) score += 500;
+              } else if (isSeqTile(bottomTile, current, 1)) {
+                const bottomBottomTile = topY + 1 < nextCpu.board.height ? nextCpu.board.tiles[topY + 1][x] : null;
+                if (bottomBottomTile && isSeqTile(bottomBottomTile, current, 2)) {
+                  if (isSeqTile(bottomBottomTile, bottomTile, 1)) {
+                    score += 400;
                   }
                 }
               }

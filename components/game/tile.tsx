@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Bird } from 'lucide-react';
 import { MahjongTile, getTileKey, TILE_DISPLAY } from '@/lib/mahjong-types';
 import { cn } from '@/lib/utils';
 
@@ -79,36 +80,53 @@ const honorDisplay: Record<string, string> = {
 
 // Pinzu (dots) visual representation
 function PinzuDots({ number, size }: { number: number; size: 'sm' | 'md' | 'lg' }) {
-  const dotSize = size === 'sm' ? 'w-1.5 h-1.5' : size === 'md' ? 'w-2 h-2' : 'w-2.5 h-2.5';
-  const gap = size === 'sm' ? 'gap-0.5' : 'gap-1';
-  
+  // 1 = blue, 2 = red
   const patterns: Record<number, number[][]> = {
-    1: [[1]],
+    1: [[2]],
     2: [[1], [1]],
-    3: [[1], [1], [1]],
+    3: [[1], [2], [1]],
     4: [[1, 1], [1, 1]],
-    5: [[1, 1], [1], [1, 1]],
+    5: [[1, 1], [2], [1, 1]],
     6: [[1, 1], [1, 1], [1, 1]],
-    7: [[1, 1], [1, 1, 1], [1, 1]],
-    8: [[1, 1, 1], [1, 1], [1, 1, 1]],
-    9: [[1, 1, 1], [1, 1, 1], [1, 1, 1]],
+    7: [[2, 2, 2], [1, 1], [1, 1]], // Top 3 red, bottom 4 blue (2x2)
+    8: [[1, 1], [1, 1], [1, 1], [1, 1]], // 4 rows of 2 blue
+    9: [[1, 1, 1], [2, 2, 2], [1, 1, 1]], // 3x3, middle red
   };
 
   const pattern = patterns[number] || [[1]];
+  const rowsCount = pattern.length;
+  const maxCols = Math.max(...pattern.map(r => r.length));
+
+  const getDotSize = (num: number, rCount: number, cCount: number) => {
+    if (num === 1) return size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-6 h-6' : 'w-8 h-8';
+    
+    // If dense, use smaller dots
+    const isDense = rCount >= 4 || cCount >= 3;
+    if (size === 'sm') return isDense ? 'w-1.5 h-1.5' : 'w-2 h-2';
+    if (size === 'md') return isDense ? 'w-2 h-2' : 'w-2.5 h-2.5';
+    return isDense ? 'w-2.5 h-2.5' : 'w-3 h-3';
+  };
+  
+  const dotSize = getDotSize(number, rowsCount, maxCols);
+  const gap = (rowsCount >= 4 || maxCols >= 3) ? 'gap-[2px]' : size === 'sm' ? 'gap-0.5' : 'gap-1';
 
   return (
-    <div className={cn('flex flex-col items-center justify-center', gap)}>
+    <div className={cn(
+      'flex flex-col items-center justify-center w-full h-full', 
+      gap,
+      number === 3 && '-rotate-[45deg]'
+    )}>
       {pattern.map((row, i) => (
         <div key={i} className={cn('flex', gap)}>
-          {row.map((_, j) => (
+          {row.map((item, j) => (
             <div
               key={j}
               className={cn(
                 dotSize,
-                'rounded-full',
-                'bg-[var(--tile-pinzu)]',
-                'shadow-inner',
-                'border border-blue-700/30'
+                'rounded-full shadow-sm border',
+                item === 2 
+                  ? 'bg-rose-600 border-rose-800/80' 
+                  : 'bg-[var(--tile-pinzu)] border-blue-700/50' 
               )}
             />
           ))}
@@ -121,45 +139,76 @@ function PinzuDots({ number, size }: { number: number; size: 'sm' | 'md' | 'lg' 
 // Souzu (bamboo) visual representation
 function SouzuBamboo({ number, size }: { number: number; size: 'sm' | 'md' | 'lg' }) {
   if (number === 1) {
-    // Special bird design for 1 sou
-    const birdSize = size === 'sm' ? 'text-lg' : size === 'md' ? 'text-xl' : 'text-2xl';
+    const iconSize = size === 'sm' ? 20 : size === 'md' ? 26 : 32;
     return (
-      <div className={cn(birdSize, 'text-[var(--tile-souzu)] font-bold')}>
-        鳥
+      <div className="text-emerald-700 flex items-center justify-center w-full h-full">
+        <Bird 
+          size={iconSize} 
+          strokeWidth={2}
+          className="fill-emerald-600/30"
+        />
       </div>
     );
   }
 
-  const stickHeight = size === 'sm' ? 'h-3' : size === 'md' ? 'h-4' : 'h-5';
-  const stickWidth = 'w-1';
-  const gap = size === 'sm' ? 'gap-0.5' : 'gap-0.5';
-
-  // Arrange bamboo sticks
-  const getRows = (n: number): number[] => {
-    if (n <= 4) return [n];
-    if (n <= 6) return [Math.ceil(n / 2), Math.floor(n / 2)];
-    if (n <= 8) return [Math.ceil(n / 2), Math.floor(n / 2)];
-    return [3, 3, 3];
+  // g = green, r = red
+  const patterns: Record<number, ('g'|'r')[][]> = {
+    2: [['g'], ['g']],
+    3: [['g', 'g', 'g']],
+    4: [['g', 'g'], ['g', 'g']],
+    5: [['g', 'g'], ['r'], ['g', 'g']],
+    6: [['g', 'g', 'g'], ['g', 'g', 'g']],
+    7: [['r', 'r', 'r'], ['g', 'g', 'g', 'g']],
+    8: [['g', 'g', 'g', 'g'], ['g', 'g', 'g', 'g']],
+    9: [['g', 'g', 'g'], ['r', 'r', 'r'], ['g', 'g', 'g']],
   };
 
-  const rows = getRows(number);
+  const pattern = patterns[number] || [['g']];
+  const rowsCount = pattern.length;
+  const maxCols = Math.max(...pattern.map(r => r.length));
+
+  const getDims = () => {
+    const dense = maxCols >= 4;
+    if (size === 'sm') return { w: dense ? 'w-[3px]' : 'w-1.5', h: rowsCount === 1 ? 'h-5' : rowsCount === 2 ? 'h-3' : 'h-1.5', gap: 'gap-[2px]' };
+    if (size === 'md') return { w: dense ? 'w-[5px]' : 'w-2', h: rowsCount === 1 ? 'h-7' : rowsCount === 2 ? 'h-4' : 'h-2.5', gap: 'gap-[2px]' };
+    return { w: dense ? 'w-[7px]' : 'w-2.5', h: rowsCount === 1 ? 'h-9' : rowsCount === 2 ? 'h-5' : 'h-3', gap: 'gap-[3px]' };
+  };
+
+  const dims = getDims();
 
   return (
-    <div className={cn('flex flex-col items-center', gap)}>
-      {rows.map((count, i) => (
-        <div key={i} className={cn('flex', gap)}>
-          {Array.from({ length: count }).map((_, j) => (
-            <div
-              key={j}
-              className={cn(
-                stickWidth,
-                stickHeight,
-                'rounded-full',
-                'bg-[var(--tile-souzu)]',
-                'border border-emerald-800/30'
-              )}
-            />
-          ))}
+    <div className={cn('flex flex-col items-center justify-center w-full h-full', dims.gap)}>
+      {pattern.map((row, i) => (
+        <div key={i} className={cn('flex items-center justify-center', dims.gap)}>
+          {row.map((color, j) => {
+            let rotationClass = '';
+            if (number === 8) {
+              if (i === 0) { // Top row M: /\/\
+                rotationClass = j % 2 === 0 ? 'rotate-[15deg]' : '-rotate-[15deg]';
+              } else { // Bottom row W: \/\/
+                rotationClass = j % 2 === 0 ? '-rotate-[15deg]' : 'rotate-[15deg]';
+              }
+            } else if (number === 7 && i === 0) {
+              // Top 3 sticks fan out: \ | /
+              if (j === 0) rotationClass = '-rotate-[15deg]';
+              else if (j === 2) rotationClass = 'rotate-[15deg]';
+            }
+
+            return (
+              <div
+                key={j}
+                className={cn(
+                  dims.w,
+                  dims.h,
+                  'rounded-[2px] shadow-sm',
+                  color === 'r' 
+                    ? 'bg-rose-600 border border-rose-800/80' 
+                    : 'bg-emerald-600 border border-emerald-800/80',
+                  rotationClass
+                )}
+              />
+            );
+          })}
         </div>
       ))}
     </div>
@@ -221,6 +270,22 @@ export const Tile = React.memo(function Tile({ tile, size = 'md', isGhost = fals
         }}
       />
 
+      {/* Accessibility Index (Small number in corner) */}
+      {['pinzu', 'souzu', 'manzu'].includes(tile.suit) && tile.number && (
+         <div 
+           className={cn(
+             "absolute top-0.5 left-1 font-black opacity-40 leading-none select-none z-10",
+             textColor,
+           )} 
+           style={{ 
+             fontSize: size === 'sm' ? '8px' : size === 'md' ? '10px' : '13px',
+             textShadow: '0 1px 1px rgba(255,255,255,0.8)'
+           }}
+         >
+            {tile.number}
+         </div>
+      )}
+
       {/* Tile content */}
       {tile.suit === 'pinzu' && tile.number ? (
         <PinzuDots number={tile.number} size={size} />
@@ -228,9 +293,9 @@ export const Tile = React.memo(function Tile({ tile, size = 'md', isGhost = fals
         <SouzuBamboo number={tile.number} size={size} />
       ) : tile.suit === 'manzu' && tile.number ? (
         // Manzu (characters) - traditional display
-        <div className={cn('flex flex-col items-center leading-none', textColor)}>
-          <span className={sizeClass.number}>{numberDisplay[tile.number]}</span>
-          <span className={cn(sizeClass.suit, 'opacity-90')}>{suitDisplay.manzu}</span>
+        <div className={cn('flex flex-col items-center justify-center w-full h-full leading-none', textColor)}>
+          <span className={cn(sizeClass.number, 'font-black')}>{numberDisplay[tile.number]}</span>
+          <span className={cn(sizeClass.suit, 'opacity-90 font-bold mt-0.5')}>{suitDisplay.manzu}</span>
         </div>
       ) : isWhiteDragon ? (
         // White dragon - completely empty as requested (no pattern)
