@@ -42,12 +42,22 @@ export function YakuGuide({ open, onOpenChange }: YakuGuideProps) {
         <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <HelpIcon className="h-5 w-5 text-primary" />
-            ルール
+            遊び方
           </DialogTitle>
         </DialogHeader>
         
         <ScrollArea className="h-[75vh] pr-4 -mr-4">
           <div className="flex flex-col gap-8 w-full">
+            {/* 基本的な遊び方 */}
+            <div className="p-4 bg-muted/50 rounded-lg border border-border">
+              <h3 className="font-bold text-lg text-primary mb-3">基本的な遊び方</h3>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                <li>• <strong>入れ替え：</strong> 盤面の牌をスワイプ（またはドラッグ）して隣の牌と入れ替えます。</li>
+                <li>• <strong>消去：</strong> 同じ牌を3つ以上、または連続する数字を3つ以上繋げると消えます。</li>
+                <li>• <strong>連鎖：</strong> 牌が消えて空いたスペースに上の牌が落ちてきます。連続して消えると連鎖ボーナス！</li>
+                <li>• <strong>役作り：</strong> 麻雀の役を作ると高得点！消した牌はストックされ、条件を満たすと役ボーナスが入ります。</li>
+              </ul>
+            </div>
             {categories.map((cat) => {
               const yakus = YAKU_DEFINITIONS.filter((y) => y.category === cat.id);
               if (yakus.length === 0) return null;
@@ -304,7 +314,7 @@ export function YakuGuideButton({ onClick }: { onClick: () => void }) {
       className="gap-2"
     >
       <HelpIcon className="h-4 w-4" />
-      ルール
+      遊び方
     </Button>
   );
 }

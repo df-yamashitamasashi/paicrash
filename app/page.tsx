@@ -290,10 +290,10 @@ export default function MahjongPuzzleGame() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 group-hover:text-primary transition-colors">
                     <GuideIcon className="h-5 w-5" />
-                    役ガイド
+                    遊び方
                   </CardTitle>
                   <CardDescription>
-                    麻雀役の一覧と消し方を確認
+                    遊び方と麻雀役の一覧を確認
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -306,7 +306,7 @@ export default function MahjongPuzzleGame() {
                       setShowYakuGuide(true);
                     }}
                   >
-                    ガイドを見る
+                    遊び方を見る
                   </Button>
                 </CardContent>
               </Card>

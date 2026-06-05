@@ -55,7 +55,7 @@ export default function TilesPage() {
           {renderSection('筒子 (ピンズ)', pinzuTiles)}
           {renderSection('索子 (ソーズ)', souzuTiles)}
           {renderSection('字牌 (ジハイ)', honorTiles)}
-          {renderSection('特殊牌', [ojamaTile])}
+          {renderSection('特殊牌（お邪魔牌）', [ojamaTile])}
         </div>
       </main>
     </div>
