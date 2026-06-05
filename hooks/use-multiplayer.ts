@@ -236,13 +236,16 @@ export function useMultiplayer() {
         
         // Send garbage to opponent
         if (garbageSent > 0) {
-          const matchSnapshot = useMultiplayerStore.getState().matchSnapshot;
-          const opponent = matchSnapshot?.players.find(p => p.playerId !== playerId);
-          if (opponent) {
-            const oppRef = ref(db, `rooms/${roomId}/match/players/${opponent.playerId}/gameState/garbageQueue`);
-            runTransaction(oppRef, (currentVal) => {
-              return (currentVal || 0) + garbageSent;
-            });
+          const currentRoom = useMultiplayerStore.getState().currentRoom;
+          if (currentRoom?.isOjamaEnabled !== false) {
+            const matchSnapshot = useMultiplayerStore.getState().matchSnapshot;
+            const opponent = matchSnapshot?.players.find(p => p.playerId !== playerId);
+            if (opponent) {
+              const oppRef = ref(db, `rooms/${roomId}/match/players/${opponent.playerId}/gameState/garbageQueue`);
+              runTransaction(oppRef, (currentVal) => {
+                return (currentVal || 0) + garbageSent;
+              });
+            }
           }
         }
         
@@ -415,7 +418,7 @@ export function useMultiplayer() {
     stopGameLoop();
   }, [store, cleanupListeners, stopGameLoop]);
 
-  const createRoom = useCallback(async (roomName: string) => {
+  const createRoom = useCallback(async (roomName: string, isOjamaEnabled: boolean = true) => {
     const { playerId, playerName } = store;
     if (!playerId) return false;
 
@@ -428,6 +431,7 @@ export function useMultiplayer() {
       maxPlayers: 2,
       maxSpectators: 10,
       isStarted: false,
+      isOjamaEnabled,
       createdAt: Date.now(),
       players: {
         [playerId]: {
@@ -620,7 +624,7 @@ export function useMultiplayer() {
         gameState: JSON.parse(JSON.stringify(newState))
       });
 
-      if (garbageSent > 0) {
+      if (garbageSent > 0 && currentRoom.isOjamaEnabled !== false) {
         const opponent = matchSnapshot?.players.find(p => p.playerId !== playerId);
         if (opponent) {
           const oppRef = ref(db, `rooms/${currentRoom.id}/match/players/${opponent.playerId}/gameState/garbageQueue`);

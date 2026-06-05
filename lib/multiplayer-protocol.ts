@@ -32,6 +32,7 @@ export interface PublicRoom {
   maxPlayers: number;
   maxSpectators: number;
   isStarted: boolean;
+  isOjamaEnabled?: boolean;
   createdAt: number;
   spectatorCount: number;
 }
@@ -44,6 +45,7 @@ export interface PublicRoomListItem {
   spectatorCount: number;
   maxSpectators: number;
   isStarted: boolean;
+  isOjamaEnabled?: boolean;
   createdAt: number;
 }
 

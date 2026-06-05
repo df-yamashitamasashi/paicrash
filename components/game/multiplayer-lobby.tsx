@@ -57,6 +57,7 @@ export function MultiplayerLobby({ onBack }: MultiplayerLobbyProps) {
 
   const { data: session } = useSession();
   const [roomNameInput, setRoomNameInput] = useState('');
+  const [isOjamaEnabledInput, setIsOjamaEnabledInput] = useState(true);
   const [chatInput, setChatInput] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [resumeAttempted, setResumeAttempted] = useState(false);
@@ -83,9 +84,10 @@ export function MultiplayerLobby({ onBack }: MultiplayerLobbyProps) {
 
   const handleCreateRoom = async () => {
     if (roomNameInput.trim()) {
-      await createRoom(roomNameInput.trim());
+      await createRoom(roomNameInput.trim(), isOjamaEnabledInput);
       setShowCreateDialog(false);
       setRoomNameInput('');
+      setIsOjamaEnabledInput(true);
     }
   };
 
@@ -145,6 +147,7 @@ export function MultiplayerLobby({ onBack }: MultiplayerLobbyProps) {
               <h2 className="text-xl font-bold text-primary">{currentRoom.name}</h2>
               {isSpectator && <Badge variant="outline">観戦中</Badge>}
               {currentRoom.isStarted && <Badge>対戦中</Badge>}
+              {currentRoom.isOjamaEnabled === false && <Badge variant="secondary" className="border-primary/20 text-primary">おじゃま：なし</Badge>}
             </div>
             <p className="text-sm text-muted-foreground">
               {currentRoom.players.length}/{currentRoom.maxPlayers} プレイヤー · 観戦 {currentRoom.spectatorCount}/{currentRoom.maxSpectators}
@@ -343,6 +346,7 @@ export function MultiplayerLobby({ onBack }: MultiplayerLobbyProps) {
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium">{room.name}</h4>
                       {room.isStarted && <Badge>対戦中</Badge>}
+                      {room.isOjamaEnabled === false && <Badge variant="secondary" className="text-[10px] h-5 px-1.5 border-primary/20 text-primary">おじゃま：なし</Badge>}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {room.playerCount}/{room.maxPlayers} プレイヤー · 観戦 {room.spectatorCount}/{room.maxSpectators}
@@ -388,6 +392,34 @@ export function MultiplayerLobby({ onBack }: MultiplayerLobbyProps) {
               onKeyDown={(e) => e.key === 'Enter' && handleCreateRoom()}
               maxLength={32}
             />
+            <div className="flex items-center justify-between border rounded-md p-3">
+              <div className="flex flex-col">
+                <span className="text-sm font-bold">おじゃまブロック</span>
+                <span className="text-xs text-muted-foreground">OFFにするとお互いにおじゃまが降りません</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="ojama" 
+                    checked={isOjamaEnabledInput} 
+                    onChange={() => setIsOjamaEnabledInput(true)} 
+                    className="cursor-pointer"
+                  />
+                  あり
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer ml-2">
+                  <input 
+                    type="radio" 
+                    name="ojama" 
+                    checked={!isOjamaEnabledInput} 
+                    onChange={() => setIsOjamaEnabledInput(false)}
+                    className="cursor-pointer"
+                  />
+                  なし
+                </label>
+              </div>
+            </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
                 キャンセル

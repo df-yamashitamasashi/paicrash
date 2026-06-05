@@ -39,7 +39,9 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
     togglePause,
     cpuSpeed,
     setCpuSpeed,
-    countdown
+    countdown,
+    isOjamaEnabled,
+    setIsOjamaEnabled
   } = useCpuGame();
   const [showGuide, setShowGuide] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -226,28 +228,60 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
           </div>
 
           <div className="hidden md:flex flex-col items-center gap-4">
-            {/* CPU Difficulty / Speed adjustment */}
-            <div className="flex flex-col items-center gap-1.5 bg-card/60 backdrop-blur-md p-3 rounded-2xl border border-border/40 w-full shadow-sm">
-              <span className="text-xs font-semibold text-muted-foreground block text-center">CPU難易度 (反応速度)</span>
-              <div className="flex gap-1 p-0.5 bg-muted/60 rounded-lg w-full justify-around">
-                {(['slow', 'normal', 'fast', 'insane'] as const).map((speed) => {
-                  const label = { slow: '遅い', normal: '普通', fast: '速い', insane: '鬼神' }[speed];
-                  const isActive = cpuSpeed === speed;
-                  return (
-                    <button
-                      key={speed}
-                      onClick={() => setCpuSpeed(speed)}
-                      className={cn(
-                        "px-2.5 py-1 text-xs font-bold rounded-md transition-all duration-200 cursor-pointer flex-1 text-center",
-                        isActive 
-                          ? "bg-primary text-primary-foreground shadow-sm scale-105" 
-                          : "text-muted-foreground hover:bg-card/40 hover:text-foreground"
-                      )}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
+            {/* Settings block */}
+            <div className="flex flex-col gap-2 w-full">
+              {/* CPU Difficulty / Speed adjustment */}
+              <div className="flex flex-col items-center gap-1.5 bg-card/60 backdrop-blur-md p-3 rounded-2xl border border-border/40 w-full shadow-sm">
+                <span className="text-xs font-semibold text-muted-foreground block text-center">CPU難易度 (反応速度)</span>
+                <div className="flex gap-1 p-0.5 bg-muted/60 rounded-lg w-full justify-around">
+                  {(['slow', 'normal', 'fast', 'insane'] as const).map((speed) => {
+                    const label = { slow: '遅い', normal: '普通', fast: '速い', insane: '鬼神' }[speed];
+                    const isActive = cpuSpeed === speed;
+                    return (
+                      <button
+                        key={speed}
+                        onClick={() => setCpuSpeed(speed)}
+                        className={cn(
+                          "px-2.5 py-1 text-xs font-bold rounded-md transition-all duration-200 cursor-pointer flex-1 text-center",
+                          isActive 
+                            ? "bg-primary text-primary-foreground shadow-sm scale-105" 
+                            : "text-muted-foreground hover:bg-card/40 hover:text-foreground"
+                        )}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Ojama Settings */}
+              <div className="flex flex-col items-center gap-1.5 bg-card/60 backdrop-blur-md p-3 rounded-2xl border border-border/40 w-full shadow-sm">
+                <span className="text-xs font-semibold text-muted-foreground block text-center">おじゃまブロック</span>
+                <div className="flex gap-1 p-0.5 bg-muted/60 rounded-lg w-full justify-around">
+                  <button
+                    onClick={() => setIsOjamaEnabled(true)}
+                    className={cn(
+                      "px-2.5 py-1 text-xs font-bold rounded-md transition-all duration-200 cursor-pointer flex-1 text-center",
+                      isOjamaEnabled 
+                        ? "bg-primary text-primary-foreground shadow-sm scale-105" 
+                        : "text-muted-foreground hover:bg-card/40 hover:text-foreground"
+                    )}
+                  >
+                    あり
+                  </button>
+                  <button
+                    onClick={() => setIsOjamaEnabled(false)}
+                    className={cn(
+                      "px-2.5 py-1 text-xs font-bold rounded-md transition-all duration-200 cursor-pointer flex-1 text-center",
+                      !isOjamaEnabled 
+                        ? "bg-primary text-primary-foreground shadow-sm scale-105" 
+                        : "text-muted-foreground hover:bg-card/40 hover:text-foreground"
+                    )}
+                  >
+                    なし
+                  </button>
+                </div>
               </div>
             </div>
             <GameStats
@@ -352,28 +386,57 @@ export function CpuGame({ onGameEnd }: CpuGameProps) {
           </div>
         </div>
 
-        {/* Mobile difficulty selector */}
-        <div className="flex items-center justify-between px-3 py-1.5 bg-card/30 border-b border-border/50 shrink-0 text-xs gap-2">
-          <span className="text-[10px] font-bold text-muted-foreground shrink-0">CPU速度:</span>
-          <div className="flex gap-1 p-0.5 bg-muted/80 rounded-md flex-1 justify-around">
-            {(['slow', 'normal', 'fast', 'insane'] as const).map((speed) => {
-              const label = { slow: '遅い', normal: '普通', fast: '速い', insane: '鬼神' }[speed];
-              const isActive = cpuSpeed === speed;
-              return (
-                <button
-                  key={speed}
-                  onClick={() => setCpuSpeed(speed)}
-                  className={cn(
-                    "px-2 py-0.5 text-[10px] font-bold rounded transition-all duration-155 cursor-pointer flex-1 text-center",
-                    isActive 
-                      ? "bg-primary text-primary-foreground font-extrabold" 
-                      : "text-muted-foreground"
-                  )}
-                >
-                  {label}
-                </button>
-              );
-            })}
+        {/* Mobile difficulty and settings selector */}
+        <div className="flex flex-col px-3 py-1.5 bg-card/30 border-b border-border/50 shrink-0 gap-1.5">
+          <div className="flex items-center justify-between text-xs gap-2">
+            <span className="text-[10px] font-bold text-muted-foreground shrink-0 w-12">CPU速度:</span>
+            <div className="flex gap-1 p-0.5 bg-muted/80 rounded-md flex-1 justify-around">
+              {(['slow', 'normal', 'fast', 'insane'] as const).map((speed) => {
+                const label = { slow: '遅い', normal: '普通', fast: '速い', insane: '鬼神' }[speed];
+                const isActive = cpuSpeed === speed;
+                return (
+                  <button
+                    key={speed}
+                    onClick={() => setCpuSpeed(speed)}
+                    className={cn(
+                      "px-2 py-0.5 text-[10px] font-bold rounded transition-all duration-155 cursor-pointer flex-1 text-center",
+                      isActive 
+                        ? "bg-primary text-primary-foreground font-extrabold" 
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex items-center justify-between text-xs gap-2">
+            <span className="text-[10px] font-bold text-muted-foreground shrink-0 w-12">おじゃま:</span>
+            <div className="flex gap-1 p-0.5 bg-muted/80 rounded-md flex-1 justify-around">
+              <button
+                onClick={() => setIsOjamaEnabled(true)}
+                className={cn(
+                  "px-2 py-0.5 text-[10px] font-bold rounded transition-all duration-155 cursor-pointer flex-1 text-center",
+                  isOjamaEnabled 
+                    ? "bg-primary text-primary-foreground font-extrabold" 
+                    : "text-muted-foreground"
+                )}
+              >
+                あり
+              </button>
+              <button
+                onClick={() => setIsOjamaEnabled(false)}
+                className={cn(
+                  "px-2 py-0.5 text-[10px] font-bold rounded transition-all duration-155 cursor-pointer flex-1 text-center",
+                  !isOjamaEnabled 
+                    ? "bg-primary text-primary-foreground font-extrabold" 
+                    : "text-muted-foreground"
+                )}
+              >
+                なし
+              </button>
+            </div>
           </div>
         </div>
 

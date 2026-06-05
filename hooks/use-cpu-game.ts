@@ -26,6 +26,12 @@ export function useCpuGame() {
   const [isGameOver, setIsGameOver] = useState(false);
   const [winner, setWinner] = useState<'player' | 'cpu' | null>(null);
   const [cpuSpeed, setCpuSpeed] = useState<'slow' | 'normal' | 'fast' | 'insane'>('normal');
+  const [isOjamaEnabled, setIsOjamaEnabled] = useState(true);
+  const isOjamaEnabledRef = useRef(true);
+  useEffect(() => {
+    isOjamaEnabledRef.current = isOjamaEnabled;
+  }, [isOjamaEnabled]);
+  
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   
@@ -169,7 +175,7 @@ export function useCpuGame() {
       }
     }
 
-    if (result.garbageSent > 0 && nextCpu) {
+    if (result.garbageSent > 0 && nextCpu && isOjamaEnabledRef.current) {
       nextCpu = { ...nextCpu, garbageQueue: nextCpu.garbageQueue + result.garbageSent };
     }
     
@@ -220,7 +226,7 @@ export function useCpuGame() {
           audio.playPlace();
         }
 
-        if (res.garbageSent > 0 && nextCpu) {
+        if (res.garbageSent > 0 && nextCpu && isOjamaEnabledRef.current) {
           nextCpu = { ...nextCpu, garbageQueue: nextCpu.garbageQueue + res.garbageSent };
         }
       }
@@ -393,7 +399,7 @@ export function useCpuGame() {
             audio.playPlace();
           }
 
-          if (res.garbageSent > 0) {
+          if (res.garbageSent > 0 && isOjamaEnabledRef.current) {
             nextPlayer = { ...nextPlayer, garbageQueue: nextPlayer.garbageQueue + res.garbageSent };
           }
         }
@@ -439,6 +445,8 @@ export function useCpuGame() {
     togglePause,
     cpuSpeed,
     setCpuSpeed,
-    countdown
+    countdown,
+    isOjamaEnabled,
+    setIsOjamaEnabled
   };
 }

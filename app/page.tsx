@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { useSession, signOut } from 'next-auth/react';
 import { SinglePlayerGame } from '@/components/game/single-player';
@@ -25,6 +26,7 @@ type GameMode = 'menu' | 'single' | 'cpu' | 'multiplayer-lobby' | 'multiplayer-g
 
 
 export default function MahjongPuzzleGame() {
+  const router = useRouter();
   const { data: session } = useSession();
   const [gameMode, setGameMode] = useState<GameMode>('menu');
   const [showYakuGuide, setShowYakuGuide] = useState(false);
@@ -279,7 +281,7 @@ export default function MahjongPuzzleGame() {
               </Card>
 
               <Card
-                className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg group md:col-span-2"
+                className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg group md:col-span-1"
                 onClick={() => {
                   playClick();
                   setShowYakuGuide(true);
@@ -291,7 +293,7 @@ export default function MahjongPuzzleGame() {
                     役ガイド
                   </CardTitle>
                   <CardDescription>
-                    麻雀役の一覧と消し方を確認。初心者の方はまずこちら
+                    麻雀役の一覧と消し方を確認
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -305,6 +307,37 @@ export default function MahjongPuzzleGame() {
                     }}
                   >
                     ガイドを見る
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card
+                className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg group md:col-span-1"
+                onClick={() => {
+                  playClick();
+                  router.push('/tiles');
+                }}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 group-hover:text-primary transition-colors">
+                    <TileLogoIcon className="h-5 w-5" />
+                    牌一覧・図鑑
+                  </CardTitle>
+                  <CardDescription>
+                    ゲームに登場するすべての牌を確認
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      playClick();
+                      router.push('/tiles');
+                    }}
+                  >
+                    図鑑を見る
                   </Button>
                 </CardContent>
               </Card>

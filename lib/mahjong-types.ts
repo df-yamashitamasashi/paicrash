@@ -67,6 +67,7 @@ export interface MultiplayerRoom {
   id: string;
   players: PlayerState[];
   isStarted: boolean;
+  isOjamaEnabled: boolean;
   winner: string | null;
 }
 
