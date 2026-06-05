@@ -17,7 +17,7 @@ export function PromoBanner({ className }: PromoBannerProps) {
       <div className="relative bg-white/90 dark:bg-card/90 backdrop-blur-sm border border-pink-200/50 rounded-xl p-3 flex flex-row items-center justify-between h-[80px] sm:h-[90px] shadow-sm overflow-hidden transition-colors hover:bg-white dark:hover:bg-card/95">
         <div className="absolute top-1.5 right-2.5 text-[9px] text-muted-foreground/50 uppercase tracking-widest font-semibold">Sponsor</div>
         
-        <div className="flex items-center gap-3 w-full">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
           {/* Icon */}
           <div className="bg-pink-100 text-pink-600 p-2 sm:p-2.5 rounded-full flex-shrink-0 shadow-inner">
             <Gift className="h-5 w-5 sm:h-6 sm:w-6" />
