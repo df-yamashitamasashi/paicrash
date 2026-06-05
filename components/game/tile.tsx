@@ -160,7 +160,7 @@ function SouzuBamboo({ number, size }: { number: number; size: 'sm' | 'md' | 'lg
     6: [['g', 'g', 'g'], ['g', 'g', 'g']],
     7: [['r', 'r', 'r'], ['g', 'g', 'g', 'g']],
     8: [['g', 'g', 'g', 'g'], ['g', 'g', 'g', 'g']],
-    9: [['g', 'g', 'g'], ['r', 'r', 'r'], ['g', 'g', 'g']],
+    9: [['g', 'r', 'g'], ['g', 'r', 'g'], ['g', 'r', 'g']], // Vertical red stripe to contrast Pinzu's horizontal red stripe
   };
 
   const pattern = patterns[number] || [['g']];
@@ -169,9 +169,22 @@ function SouzuBamboo({ number, size }: { number: number; size: 'sm' | 'md' | 'lg
 
   const getDims = () => {
     const dense = maxCols >= 4;
-    if (size === 'sm') return { w: dense ? 'w-[3px]' : 'w-1.5', h: rowsCount === 1 ? 'h-5' : rowsCount === 2 ? 'h-3' : 'h-1.5', gap: 'gap-[2px]' };
-    if (size === 'md') return { w: dense ? 'w-[5px]' : 'w-2', h: rowsCount === 1 ? 'h-7' : rowsCount === 2 ? 'h-4' : 'h-2.5', gap: 'gap-[2px]' };
-    return { w: dense ? 'w-[7px]' : 'w-2.5', h: rowsCount === 1 ? 'h-9' : rowsCount === 2 ? 'h-5' : 'h-3', gap: 'gap-[3px]' };
+    // Explicitly define heights so bamboo always looks like vertical sticks, not squares
+    if (size === 'sm') return { 
+      w: dense ? 'w-[2px]' : 'w-[3px]', 
+      h: rowsCount === 1 ? 'h-[20px]' : rowsCount === 2 ? 'h-[12px]' : 'h-[8px]', 
+      gap: 'gap-[2px]' 
+    };
+    if (size === 'md') return { 
+      w: dense ? 'w-[3px]' : 'w-[4px]', 
+      h: rowsCount === 1 ? 'h-[26px]' : rowsCount === 2 ? 'h-[14px]' : 'h-[10px]', 
+      gap: 'gap-[2px]' 
+    };
+    return { 
+      w: dense ? 'w-[4px]' : 'w-[5px]', 
+      h: rowsCount === 1 ? 'h-[32px]' : rowsCount === 2 ? 'h-[20px]' : 'h-[14px]', 
+      gap: 'gap-[3px]' 
+    };
   };
 
   const dims = getDims();
