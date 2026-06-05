@@ -62,6 +62,7 @@ export interface PlayerMatchSnapshot {
   playerId: string;
   playerName: string;
   gameState: GameState;
+  incomingGarbageTotal?: number;
 }
 
 export interface MatchSnapshot {

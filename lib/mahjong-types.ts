@@ -53,6 +53,7 @@ export interface GameState {
   lastYaku: Yaku | null;
   clearHistory: ClearResult[];
   debugTileIndex?: number;
+  processedGarbageTotal?: number;
 }
 
 export interface PlayerState {

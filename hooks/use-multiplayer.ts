@@ -139,6 +139,14 @@ export function useMultiplayer() {
             }
           }
         }
+        
+        const currentMeFull = playersList.find(p => p.playerId === myId);
+        if (currentMeFull && localGameStateRef.current) {
+          const incoming = currentMeFull.incomingGarbageTotal || 0;
+          const processed = localGameStateRef.current.processedGarbageTotal || 0;
+          const pending = incoming - processed;
+          localGameStateRef.current.garbageQueue = Math.max(0, pending);
+        }
       }
       
       const current = useMultiplayerStore.getState();
@@ -221,7 +229,10 @@ export function useMultiplayer() {
       let state = localGameStateRef.current;
       
       // Flush garbage
-      const { state: flushedState } = flushGarbageQueue(state);
+      const { state: flushedState, applied } = flushGarbageQueue(state);
+      if (applied > 0) {
+        flushedState.processedGarbageTotal = (flushedState.processedGarbageTotal || 0) + applied;
+      }
       state = flushedState;
       
       const { state: newState, garbageSent, changed } = applyGameInput(state, 'soft-drop');
@@ -241,7 +252,7 @@ export function useMultiplayer() {
             const matchSnapshot = useMultiplayerStore.getState().matchSnapshot;
             const opponent = matchSnapshot?.players.find(p => p.playerId !== playerId);
             if (opponent) {
-              const oppRef = ref(db, `rooms/${roomId}/match/players/${opponent.playerId}/gameState/garbageQueue`);
+              const oppRef = ref(db, `rooms/${roomId}/match/players/${opponent.playerId}/incomingGarbageTotal`);
               runTransaction(oppRef, (currentVal) => {
                 return (currentVal || 0) + garbageSent;
               });
@@ -617,6 +628,11 @@ export function useMultiplayer() {
 
     const { state: newState, garbageSent, changed } = applyGameInput(localGameStateRef.current, action);
     
+    // Processed garbage must be checked if action implies soft-drop/hard-drop flushed it.
+    // Actually applyGameInput calls flushGarbageQueue internally when creating state? No, it doesn't!
+    // But applyGameInput doesn't flush the queue. It only spawns it.
+    // So processedGarbageTotal doesn't change here.
+    
     if (changed) {
       localGameStateRef.current = newState;
       
@@ -627,7 +643,7 @@ export function useMultiplayer() {
       if (garbageSent > 0 && currentRoom.isOjamaEnabled !== false) {
         const opponent = matchSnapshot?.players.find(p => p.playerId !== playerId);
         if (opponent) {
-          const oppRef = ref(db, `rooms/${currentRoom.id}/match/players/${opponent.playerId}/gameState/garbageQueue`);
+          const oppRef = ref(db, `rooms/${currentRoom.id}/match/players/${opponent.playerId}/incomingGarbageTotal`);
           runTransaction(oppRef, (currentVal) => {
             return (currentVal || 0) + garbageSent;
           });
