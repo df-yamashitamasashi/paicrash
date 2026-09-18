@@ -32,5 +32,3 @@ coverage
 *.pid
 *.seed
 *.pid.lock
-.gemini/
-.gemini
