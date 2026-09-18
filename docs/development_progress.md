@@ -122,6 +122,16 @@
 - **セルフレビュー**: 1 pass, 3 pass, 6 pass, 10 pass, 11 pass, 12 pass
 - **次のアクション**: バックログのタスク消化
 
+### 2026-09-19 — GitHub リポジトリ移行 (df-yamashitamasashi)
+
+- **担当**: AI エージェント
+- **概要**: リポジトリを `gYama/paicrash` から `df-yamashitamasashi/paicrash` (public) へ移行。GitHub CLI 経由で新規パブリックリポジトリを作成し、ローカルの git remote を更新して最新 main ブランチを push。`docs/runbook.md` のリポジトリオーナー参照を更新。
+- **変更ファイル**:
+  - `docs/runbook.md`
+  - `docs/development_progress.md`
+- **セルフレビュー**: 6 pass (リポジトリ設定・ドキュメント更新)
+- **次のアクション**: バックログのタスク消化
+
 ---
 
 ## バックログ（未着手）

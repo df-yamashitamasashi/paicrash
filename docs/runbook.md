@@ -83,7 +83,7 @@ GCP と GitHub 間の OIDC 連携を行うため、[GCP Cloud Console](https://c
 ```bash
 # プロジェクトIDとGitHubリポジトリ名の定義
 export PROJECT_ID="paicrash-94d0a"
-export REPO_NAME="gYama/paicrash"
+export REPO_NAME="df-yamashitamasashi/paicrash"
 
 # 対象プロジェクトを設定
 gcloud config set project \$PROJECT_ID
@@ -115,7 +115,7 @@ gcloud iam workload-identity-pools providers create-oidc "github-provider" \\
     --workload-identity-pool="github" \\
     --display-name="GitHub Provider" \\
     --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \\
-    --attribute-condition="assertion.repository_owner == 'gYama'" \\
+    --attribute-condition="assertion.repository_owner == 'df-yamashitamasashi'" \\
     --issuer-uri="https://token.actions.githubusercontent.com"
 
 # GitHub専用のサービスアカウントを作成します
